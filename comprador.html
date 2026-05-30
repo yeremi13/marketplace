@@ -499,6 +499,7 @@ function setGuestUI(v){
 function logoutGuest(){
   if(!confirm('¿Cerrar sesión de invitado? Tendrás que volver a ingresar tu usuario de Roblox.')) return;
   localStorage.removeItem('brainrot_guest');
+  localStorage.removeItem('brainrot_screen');
   gUser = '';
   document.getElementById('inp-guest').value = '';
   goTo('s-guest');
@@ -507,14 +508,25 @@ function logoutGuest(){
 // ── RESTORE SESSION ──
 window.addEventListener('load', ()=>{
   const saved = localStorage.getItem('brainrot_guest');
+  const lastScreen = localStorage.getItem('brainrot_screen') || 's-catalog';
   if(saved){
     gUser = saved;
     document.getElementById('inp-guest').value = saved;
     setGuestUI(saved);
     loadItems();
-    goTo('s-catalog');
+    loadPedidos();
+    goTo(lastScreen);
   }
 });
+
+// Guardar pantalla activa al navegar
+const _goToOrig = goTo;
+function goTo(id){
+  _goToOrig(id);
+  if(['s-catalog','s-pedidos'].includes(id)){
+    localStorage.setItem('brainrot_screen', id);
+  }
+}
 
 // ── LOAD ITEMS ──
 async function loadItems(){
