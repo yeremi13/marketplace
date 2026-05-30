@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BrainrotMarket - Comprar</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --brand:#FF6B35;--brand2:#FFD166;--dark:#0c0c18;--card:#141428;--card2:#1a1a35;
+  --border:rgba(255,107,53,0.18);--border2:rgba(255,107,53,0.08);--text:#eaeaf5;--muted:#6e6e92;
+  --success:#4ade80;--danger:#f87171;--purple:#b48aff;--sw:240px;
+}
+body{font-family:'Nunito',sans-serif;background:var(--dark);color:var(--text);font-size:14px;min-height:100vh;overflow-x:hidden}
+.screen{display:none}.screen.active{display:block}
+/* shell */
+.shell{display:flex;min-height:100vh}
+.sidebar{width:var(--sw);background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:60;transition:transform .3s}
+.sb-logo{padding:18px 18px 14px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:8px}
+.logo{font-family:'Bangers',cursive;font-size:24px;color:var(--brand);letter-spacing:2px}
+.logo span{color:var(--brand2)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--brand2);flex-shrink:0}
+.sb-nav{padding:10px;flex:1;overflow-y:auto}
+.sni{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;color:var(--muted);font-weight:700;font-size:13px;transition:all .15s;border:none;background:none;width:100%;text-align:left;margin-bottom:2px}
+.sni i{font-size:19px;flex-shrink:0}
+.sni:hover{background:rgba(255,107,53,.08);color:var(--text)}
+.sni.on{background:rgba(255,107,53,.14);color:var(--brand)}
+.sb-foot{padding:10px;border-top:1px solid var(--border2)}
+.main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 24px;height:58px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50}
+.ttitle{font-family:'Bangers',cursive;font-size:20px;color:var(--brand2);letter-spacing:1px}
+.spacer{flex:1}
+.hbg{display:none;background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;padding:4px;align-items:center}
+.content{padding:26px 28px;max-width:1100px;width:100%}
+/* hero */
+.hero{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:center;margin-bottom:28px}
+.hero h1{font-family:'Bangers',cursive;font-size:56px;letter-spacing:4px;color:var(--brand);line-height:.95;margin-bottom:12px}
+.hero h1 span{color:var(--brand2)}
+.hero p{color:var(--muted);font-size:15px;line-height:1.7;margin-bottom:24px;max-width:360px}
+.hbtns{display:flex;gap:12px;flex-wrap:wrap}
+.visual{background:var(--card2);border:1px solid var(--border);border-radius:20px;padding:22px}
+.egrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.ecell{background:var(--card);border-radius:10px;padding:12px;font-size:26px;text-align:center;border:1px solid var(--border2)}
+.escrow{background:rgba(255,209,102,.07);border:1px solid rgba(255,209,102,.3);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.escrow i{font-size:20px;color:var(--brand2);flex-shrink:0}
+.escrow p{font-size:12px;color:var(--muted);line-height:1.5}
+.escrow strong{color:var(--brand2)}
+/* stats */
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+.sbox{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+.snum{font-family:'Bangers',cursive;font-size:28px}
+.slbl{font-size:11px;color:var(--muted);margin-top:3px}
+/* form */
+.fcard{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:26px;max-width:500px}
+.fcard h2{font-family:'Bangers',cursive;font-size:28px;color:var(--brand2);letter-spacing:1px;margin-bottom:4px}
+.fcard .sub{color:var(--muted);font-size:13px;margin-bottom:22px;line-height:1.6}
+.field{margin-bottom:15px}
+.field label{font-size:11px;color:var(--muted);display:block;margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.field input,.field select,.field textarea{width:100%;background:#0a0a18;border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 13px;font-family:'Nunito',sans-serif;font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s}
+.field input:focus,.field select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(255,107,53,.1)}
+.field input.err{border-color:var(--danger)}
+.ferr{font-size:11px;color:var(--danger);margin-top:4px;display:none}
+.ferr.show{display:block}
+/* buttons */
+.btn-p{background:var(--brand);color:#fff;border:none;border-radius:12px;padding:13px 26px;font-family:'Bangers',cursive;font-size:18px;letter-spacing:1px;cursor:pointer;transition:opacity .15s,transform .15s;display:inline-flex;align-items:center;gap:8px}
+.btn-p:hover{opacity:.9;transform:translateY(-1px)}
+.btn-s{background:transparent;color:var(--brand2);border:2px solid var(--brand2);border-radius:12px;padding:13px 26px;font-family:'Bangers',cursive;font-size:18px;letter-spacing:1px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:8px}
+.btn-s:hover{background:rgba(255,209,102,.1)}
+.btn-full{width:100%;background:var(--brand);color:#fff;border:none;border-radius:10px;padding:13px;font-family:'Bangers',cursive;font-size:19px;letter-spacing:1px;cursor:pointer;margin-top:6px;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-full:hover{opacity:.9}
+.btn-full:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-out{width:100%;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;transition:all .15s}
+.btn-out:hover{border-color:var(--muted);color:var(--text)}
+/* info box */
+.ibox{background:rgba(255,107,53,.07);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:18px;display:flex;gap:10px}
+.ibox i{font-size:16px;color:var(--brand);flex-shrink:0;margin-top:1px}
+.ibox2{background:rgba(255,209,102,.07);border:1px solid rgba(255,209,102,.25);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:18px;display:flex;gap:10px}
+.ibox2 i{font-size:16px;color:var(--brand2);flex-shrink:0;margin-top:1px}
+/* catalog */
+.cat-head{display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+.srch{flex:1;min-width:200px;position:relative}
+.srch i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:17px}
+.srch input{width:100%;background:#0a0a18;border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 13px 10px 38px;font-family:'Nunito',sans-serif;font-size:14px;outline:none;transition:border-color .15s}
+.srch input:focus{border-color:var(--brand)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:18px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:20px;padding:7px 15px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Nunito',sans-serif;transition:all .15s}
+.chip.on{background:rgba(255,107,53,.15);color:var(--brand);border-color:var(--brand)}
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:14px}
+.icard{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:border-color .15s,transform .15s,box-shadow .15s}
+.icard:hover{border-color:var(--brand);transform:translateY(-3px);box-shadow:0 8px 24px rgba(255,107,53,.14)}
+.iimg{height:96px;display:flex;align-items:center;justify-content:center;font-size:38px;background:var(--card2);position:relative}
+.rar{position:absolute;top:7px;right:7px;font-size:9px;font-weight:800;padding:3px 8px;border-radius:5px}
+.rar-L{background:rgba(255,209,102,.2);color:#FFD166;border:1px solid rgba(255,209,102,.4)}
+.rar-E{background:rgba(149,76,233,.2);color:#b48aff;border:1px solid rgba(149,76,233,.35)}
+.rar-R{background:rgba(55,138,221,.2);color:#85b7eb;border:1px solid rgba(55,138,221,.35)}
+.rar-C{background:rgba(122,122,154,.15);color:#7a7a9a;border:1px solid rgba(122,122,154,.3)}
+.ibody{padding:12px}
+.iname{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:10px}
+.ifooter{display:flex;align-items:center;justify-content:space-between}
+.price{font-family:'Bangers',cursive;font-size:18px;color:var(--brand)}
+.price span{font-size:10px;color:var(--muted);font-family:'Nunito',sans-serif;font-weight:400}
+.buymini{background:var(--brand);color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:11px;font-weight:800;cursor:pointer;transition:opacity .15s}
+.buymini:hover{opacity:.85}
+/* pedidos */
+.stitle{font-family:'Bangers',cursive;font-size:20px;color:var(--brand2);letter-spacing:1px;margin-bottom:16px}
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px}
+.phead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px}
+.pname{font-weight:800;font-size:15px}
+.badge{font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px}
+.st-pend{background:rgba(255,209,102,.15);color:#FFD166;border:1px solid rgba(255,209,102,.3)}
+.st-verif{background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.3)}
+.st-done{background:rgba(55,138,221,.15);color:#85b7eb;border:1px solid rgba(55,138,221,.3)}
+.tbox{background:rgba(255,107,53,.08);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.tbox i{color:var(--brand);font-size:15px;flex-shrink:0}
+.chat{background:#090916;border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:12px}
+.clbl{font-size:11px;color:var(--muted);margin-bottom:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.cmsgs{min-height:70px;max-height:180px;overflow-y:auto;margin-bottom:10px}
+.cmsg{margin-bottom:8px;font-size:12px}
+.cmsg.me{text-align:right}
+.cmsg.me .bbl{background:rgba(255,107,53,.25);display:inline-block;padding:7px 12px;border-radius:14px 14px 3px 14px;max-width:80%}
+.cmsg.them .bbl{background:var(--card2);display:inline-block;padding:7px 12px;border-radius:14px 14px 14px 3px;max-width:80%}
+.crow{display:flex;gap:8px}
+.crow input{flex:1;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:9px 12px;font-family:'Nunito',sans-serif;font-size:12px;outline:none}
+.crow input:focus{border-color:var(--brand)}
+.csend{background:var(--brand);color:#fff;border:none;border-radius:9px;padding:9px 16px;font-size:12px;font-weight:800;cursor:pointer}
+.cbtn{width:100%;background:var(--success);color:#0a2e0a;border:none;border-radius:9px;padding:12px;font-weight:800;font-size:13px;cursor:pointer;margin-top:12px;display:flex;align-items:center;justify-content:center;gap:6px}
+/* modal */
+.moverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;padding:16px}
+.moverlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.mhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.mtitle{font-family:'Bangers',cursive;font-size:24px;color:var(--brand);letter-spacing:1px}
+.xbtn{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--muted);font-size:18px;cursor:pointer;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.mrow{display:flex;gap:14px;align-items:center;background:#090916;border-radius:12px;padding:14px;margin-bottom:18px}
+.memoji{font-size:32px;width:56px;height:56px;display:flex;align-items:center;justify-content:center;background:var(--card2);border-radius:12px;flex-shrink:0}
+.minfo{flex:1;min-width:0}
+.mname{font-weight:800;font-size:16px}
+.msub{font-size:12px;color:var(--muted);margin-top:4px}
+.mprice{font-family:'Bangers',cursive;font-size:26px;color:var(--brand2);white-space:nowrap}
+.mtabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px}
+.mtab{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.mtab.on{background:rgba(255,107,53,.15);color:var(--brand);border-color:var(--brand)}
+.yapebox{background:rgba(255,107,53,.07);border:1px dashed var(--brand);border-radius:14px;padding:18px;text-align:center;margin-bottom:18px}
+.ynum{font-family:'Bangers',cursive;font-size:30px;color:var(--brand2);letter-spacing:4px}
+.yhint{font-size:11px;color:var(--muted);margin-top:4px}
+.yamount{font-family:'Bangers',cursive;font-size:24px;color:var(--text);margin-top:8px}
+.steps{margin-bottom:18px}
+.step{display:flex;align-items:center;gap:12px;padding:7px 0;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border2)}
+.step:last-child{border-bottom:none}
+.stepn{width:24px;height:24px;background:rgba(255,107,53,.15);border:1px solid var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--brand);flex-shrink:0}
+.uparea{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:16px;color:var(--muted);font-size:13px;transition:all .15s;position:relative}
+.uparea:hover{border-color:var(--brand);color:var(--brand);background:rgba(255,107,53,.04)}
+.uparea i{font-size:32px;display:block;margin-bottom:8px}
+.uparea input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.uppreview{width:100%;max-height:150px;object-fit:contain;border-radius:8px;margin-bottom:12px;display:none}
+.offer-inp{width:100%;background:#0a0a18;border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 14px;font-size:15px;outline:none;font-family:'Nunito',sans-serif;margin-bottom:10px;transition:border-color .15s}
+.offer-inp:focus{border-color:var(--brand)}
+.offer-inp.err{border-color:var(--danger)}
+/* chip user */
+.uchip{background:rgba(255,107,53,.12);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:700;color:var(--brand)}
+/* toast */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);border-radius:12px;padding:12px 22px;font-weight:800;font-size:13px;display:none;z-index:999;white-space:nowrap;max-width:90vw;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.toast.ok{background:#4ade80;color:#0a2e0a}
+.toast.bad{background:#f87171;color:#2e0a0a}
+.toast.show{display:block;animation:fup .3s ease}
+@keyframes fup{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+/* back */
+.back{background:none;border:none;color:var(--muted);cursor:pointer;font-size:22px;display:flex;align-items:center;padding:4px;transition:color .15s}
+.back:hover{color:var(--text)}
+/* overlay */
+.sov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:55}
+.sov.show{display:block}
+/* loading */
+.loader{text-align:center;padding:48px;color:var(--muted);font-size:13px}
+.loader i{font-size:32px;display:block;margin-bottom:10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* empty */
+.empty{grid-column:1/-1;text-align:center;padding:48px;color:var(--muted);font-size:14px}
+/* responsive */
+@media(max-width:860px){
+  .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}.hbg{display:flex}
+  .topbar{padding:0 16px;height:54px}.content{padding:14px}
+  .hero{grid-template-columns:1fr}.hero h1{font-size:42px}
+  .hbtns{flex-direction:column}.btn-p,.btn-s{width:100%;justify-content:center}
+  .sgrid{grid-template-columns:1fr 1fr}.igrid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:480px){
+  .modal{border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%;margin:0;max-height:88vh}
+  .moverlay{align-items:flex-end;padding:0}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ HOME ═══════════ -->
+<div id="s-home" class="screen active">
+<div class="shell">
+<aside class="sidebar" id="sb0">
+  <div class="sb-logo"><div class="dot"></div><div class="logo">Brainrot<span>Market</span></div></div>
+  <nav class="sb-nav">
+    <button class="sni on"><i class="ti ti-home"></i>Inicio</button>
+    <button class="sni" onclick="goTo('s-guest');cs()"><i class="ti ti-shopping-cart"></i>Comprar ítems</button>
+    <button class="sni" onclick="window.location.href='vendedor.html'"><i class="ti ti-store"></i>Panel vendedor</button>
+  </nav>
+</aside>
+<div class="sov" onclick="cs()"></div>
+<div class="main">
+  <div class="topbar">
+    <button class="hbg" onclick="ts()"><i class="ti ti-menu-2"></i></button>
+    <div class="logo" style="font-size:20px">Brainrot<span>Market</span></div>
+    <div class="spacer"></div>
+    <button class="btn-s" style="padding:8px 18px;font-size:15px" onclick="goTo('s-guest')">Comprar ahora</button>
+  </div>
+  <div class="content">
+    <div class="hero">
+      <div>
+        <h1>BRAINROT<br><span>MARKET</span></h1>
+        <p>Compra y vende ítems de Steal a Brainrot de forma segura con sistema escrow. Sin cuentas, sin complicaciones.</p>
+        <div class="hbtns">
+          <button class="btn-p" onclick="goTo('s-guest')"><i class="ti ti-shopping-cart"></i>Comprar como invitado</button>
+          <button class="btn-s" onclick="window.location.href='vendedor.html'"><i class="ti ti-store"></i>Soy vendedor</button>
+        </div>
+      </div>
+      <div class="visual">
+        <div class="egrid">
+          <div class="ecell">🦈</div><div class="ecell">🐊</div><div class="ecell">🐸</div><div class="ecell">🥁</div>
+          <div class="ecell">🐘</div><div class="ecell">☕</div><div class="ecell">🍉</div><div class="ecell">🦦</div>
+        </div>
+        <div class="escrow"><i class="ti ti-shield-check"></i><p><strong>Sistema escrow seguro:</strong> tu dinero queda retenido hasta confirmar la entrega. 0% riesgo de estafa.</p></div>
+      </div>
+    </div>
+    <div class="sgrid" id="home-stats">
+      <div class="sbox"><div class="snum" style="color:var(--brand)" id="stat-items">—</div><div class="slbl">ítems activos</div></div>
+      <div class="sbox"><div class="snum" style="color:var(--brand2)" id="stat-vend">—</div><div class="slbl">vendedores</div></div>
+      <div class="sbox"><div class="snum" style="color:var(--success)" id="stat-sales">—</div><div class="slbl">ventas totales</div></div>
+      <div class="sbox"><div class="snum" style="color:var(--purple)">4.9★</div><div class="slbl">reputación media</div></div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ═══════════ GUEST ═══════════ -->
+<div id="s-guest" class="screen">
+<div class="shell">
+<aside class="sidebar" id="sb1">
+  <div class="sb-logo"><div class="dot"></div><div class="logo">Brainrot<span>Market</span></div></div>
+  <nav class="sb-nav">
+    <button class="sni" onclick="goTo('s-home');cs()"><i class="ti ti-home"></i>Inicio</button>
+    <button class="sni on"><i class="ti ti-shopping-cart"></i>Comprar ítems</button>
+    <button class="sni" onclick="window.location.href='vendedor.html'"><i class="ti ti-store"></i>Panel vendedor</button>
+  </nav>
+</aside>
+<div class="sov" onclick="cs()"></div>
+<div class="main">
+  <div class="topbar">
+    <button class="hbg" onclick="ts()"><i class="ti ti-menu-2"></i></button>
+    <button class="back" onclick="goTo('s-home')"><i class="ti ti-arrow-left"></i></button>
+    <span class="ttitle">Entrar como invitado</span>
+  </div>
+  <div class="content" style="max-width:580px">
+    <div class="fcard">
+      <h2>Entrar como invitado</h2>
+      <p class="sub">No necesitas cuenta. Solo pon tu usuario de Roblox para identificar tus pedidos.</p>
+      <div class="ibox"><i class="ti ti-info-circle"></i><span>Tu usuario de Roblox se usa para comunicarte con el vendedor y rastrear tu pedido.</span></div>
+      <div class="field">
+        <label>Tu usuario de Roblox</label>
+        <input id="inp-guest" type="text" placeholder="Ej: TralalaGamer99" autocomplete="off">
+        <div class="ferr" id="err-guest">Escribe tu usuario de Roblox</div>
+      </div>
+      <button class="btn-full" onclick="enterGuest()"><i class="ti ti-arrow-right" style="font-size:17px"></i>Ver catálogo</button>
+      <button class="btn-out" onclick="goTo('s-home')">Volver al inicio</button>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ═══════════ CATALOG ═══════════ -->
+<div id="s-catalog" class="screen">
+<div class="shell">
+<aside class="sidebar" id="sb2">
+  <div class="sb-logo"><div class="dot"></div><div class="logo">Brainrot<span>Market</span></div></div>
+  <nav class="sb-nav">
+    <button class="sni" onclick="goTo('s-home');cs()"><i class="ti ti-home"></i>Inicio</button>
+    <button class="sni on"><i class="ti ti-shopping-cart"></i>Catálogo</button>
+    <button class="sni" onclick="goTo('s-pedidos');cs()"><i class="ti ti-package"></i>Mis pedidos</button>
+    <button class="sni" onclick="window.location.href='vendedor.html'"><i class="ti ti-store"></i>Panel vendedor</button>
+  </nav>
+  <div class="sb-foot"><div class="uchip" id="uchip-sb">@usuario</div></div>
+</aside>
+<div class="sov" onclick="cs()"></div>
+<div class="main">
+  <div class="topbar">
+    <button class="hbg" onclick="ts()"><i class="ti ti-menu-2"></i></button>
+    <span class="ttitle">Catálogo</span>
+    <div class="spacer"></div>
+    <div class="uchip" id="uchip-top">@usuario</div>
+    <button style="background:none;border:none;cursor:pointer;padding:4px;color:var(--muted);font-size:22px;display:flex;align-items:center" onclick="goTo('s-pedidos')" title="Mis pedidos"><i class="ti ti-package"></i></button>
+  </div>
+  <div class="content">
+    <div class="cat-head">
+      <div class="srch"><i class="ti ti-search"></i><input id="search-inp" type="text" placeholder="Buscar ítem..." oninput="renderItems()"></div>
+    </div>
+    <div class="chips">
+      <button class="chip on" onclick="setF('todos',this)">Todos</button>
+      <button class="chip" onclick="setF('L',this)">⭐ Legendary</button>
+      <button class="chip" onclick="setF('E',this)">💜 Epic</button>
+      <button class="chip" onclick="setF('R',this)">💙 Rare</button>
+      <button class="chip" onclick="setF('C',this)">Common</button>
+      <button class="chip" onclick="setF('asc',this)">Menor precio</button>
+      <button class="chip" onclick="setF('desc',this)">Mayor precio</button>
+    </div>
+    <div class="igrid" id="items-grid"><div class="loader"><i class="ti ti-loader-2"></i>Cargando ítems...</div></div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ═══════════ MIS PEDIDOS ═══════════ -->
+<div id="s-pedidos" class="screen">
+<div class="shell">
+<aside class="sidebar" id="sb3">
+  <div class="sb-logo"><div class="dot"></div><div class="logo">Brainrot<span>Market</span></div></div>
+  <nav class="sb-nav">
+    <button class="sni" onclick="goTo('s-catalog');cs()"><i class="ti ti-arrow-left"></i>Volver al catálogo</button>
+    <button class="sni on"><i class="ti ti-package"></i>Mis pedidos</button>
+  </nav>
+</aside>
+<div class="sov" onclick="cs()"></div>
+<div class="main">
+  <div class="topbar">
+    <button class="hbg" onclick="ts()"><i class="ti ti-menu-2"></i></button>
+    <button class="back" onclick="goTo('s-catalog')"><i class="ti ti-arrow-left"></i></button>
+    <span class="ttitle">Mis pedidos</span>
+  </div>
+  <div class="content" style="max-width:700px">
+    <div class="stitle">Mis pedidos</div>
+    <div id="pedidos-list"><div class="loader"><i class="ti ti-loader-2"></i>Cargando...</div></div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ═══════════ MODAL COMPRA ═══════════ -->
+<div id="modal" class="moverlay" onclick="closeModalOut(event)">
+<div class="modal">
+  <div class="mhead">
+    <div class="mtitle">Confirmar pedido</div>
+    <button class="xbtn" onclick="closeModal()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="mrow">
+    <div class="memoji" id="m-emoji">🎮</div>
+    <div class="minfo">
+      <div class="mname" id="m-name">—</div>
+      <div class="msub" id="m-rar">—</div>
+    </div>
+    <div class="mprice" id="m-price">—</div>
+  </div>
+  <div class="mtabs">
+    <button class="mtab on" id="tab-dir" onclick="setMode('dir')"><i class="ti ti-bolt" style="font-size:15px"></i>Compra directa</button>
+    <button class="mtab" id="tab-off" onclick="setMode('off')"><i class="ti ti-tag" style="font-size:15px"></i>Hacer oferta</button>
+  </div>
+  <!-- DIRECT -->
+  <div id="sec-dir">
+    <div class="yapebox">
+      <div class="yhint">Envía por Yape al número</div>
+      <div class="ynum" id="m-yape-num">— — —</div>
+      <div class="yhint" style="margin-top:10px">Monto exacto</div>
+      <div class="yamount" id="m-yape-amt">S/0</div>
+      <div class="yhint" style="margin-top:6px">Concepto: tu usuario de Roblox</div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="stepn">1</div>Abre Yape y envía el monto exacto</div>
+      <div class="step"><div class="stepn">2</div>Sube la captura del comprobante abajo</div>
+      <div class="step"><div class="stepn">3</div>Verificamos en máximo 1 hora</div>
+      <div class="step"><div class="stepn">4</div>El vendedor entrega en Roblox (2h máx)</div>
+    </div>
+    <img id="preview-img" class="uppreview" alt="captura">
+    <div class="uparea" id="uparea">
+      <i class="ti ti-photo-up"></i>Toca para subir captura del comprobante Yape
+      <input type="file" accept="image/*" onchange="handleFile(event)">
+    </div>
+    <div class="ferr show" id="err-cap" style="display:none;margin-bottom:10px">Debes subir la captura del comprobante</div>
+    <button class="btn-full" id="btn-confirmar" onclick="confirmPurchase()"><i class="ti ti-send" style="font-size:17px"></i>Ya yapé — enviar pedido</button>
+  </div>
+  <!-- OFFER -->
+  <div id="sec-off" style="display:none">
+    <div class="ibox2"><i class="ti ti-info-circle"></i><span>El vendedor tiene 24h para aceptar o rechazar. Si acepta, procedes con el pago por Yape.</span></div>
+    <div class="field" style="margin-bottom:8px">
+      <label>Tu oferta en soles</label>
+      <input class="offer-inp" id="offer-amt" type="number" placeholder="Ej: 38" min="1">
+      <div class="ferr" id="err-offer">Ingresa un monto válido</div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Precio actual: <span id="offer-cur" style="color:var(--brand);font-weight:700">S/0</span></div>
+    <button class="btn-full" onclick="sendOffer()">Enviar oferta al vendedor</button>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPA_URL = 'https://qpulidzwqmgvrmhfawxb.supabase.co';
+const SUPA_KEY = 'sb_publishable_3v7n7Uxb8aYIQTFj9psHqQ_f8XXdaEh';
+const { createClient } = supabase;
+const db = createClient(SUPA_URL, SUPA_KEY);
+
+let gUser = '';
+let allItems = [];
+let activeF = 'todos';
+let curItem = null;
+let captureB64 = null;
+
+// ── NAV ──
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function ts(){
+  document.querySelectorAll('.sidebar').forEach(s=>s.classList.toggle('open'));
+  document.querySelectorAll('.sov').forEach(o=>o.classList.toggle('show'));
+}
+function cs(){
+  document.querySelectorAll('.sidebar').forEach(s=>s.classList.remove('open'));
+  document.querySelectorAll('.sov').forEach(o=>o.classList.remove('show'));
+}
+
+// ── GUEST ENTER ──
+function enterGuest(){
+  const v = document.getElementById('inp-guest').value.trim();
+  const err = document.getElementById('err-guest');
+  const inp = document.getElementById('inp-guest');
+  if(!v){inp.classList.add('err');err.classList.add('show');return;}
+  inp.classList.remove('err');err.classList.remove('show');
+  gUser = v;
+  document.querySelectorAll('#uchip-top,#uchip-sb').forEach(el=>el.textContent='@'+v);
+  loadItems();
+  goTo('s-catalog');
+}
+
+// ── LOAD ITEMS ──
+async function loadItems(){
+  const grid = document.getElementById('items-grid');
+  grid.innerHTML = '<div class="loader"><i class="ti ti-loader-2"></i>Cargando ítems...</div>';
+  const {data, error} = await db.from('items').select('*').eq('activo', true).order('created_at',{ascending:false});
+  if(error){grid.innerHTML='<div class="empty">Error cargando ítems. Intenta de nuevo.</div>';return;}
+  allItems = data || [];
+  renderItems();
+  loadStats();
+}
+
+async function loadStats(){
+  const {count: ic} = await db.from('items').select('*',{count:'exact',head:true}).eq('activo',true);
+  const {count: vc} = await db.from('vendedores').select('*',{count:'exact',head:true});
+  const {count: sc} = await db.from('pedidos').select('*',{count:'exact',head:true}).eq('estado','entregado');
+  document.getElementById('stat-items').textContent = ic||0;
+  document.getElementById('stat-vend').textContent = vc||0;
+  document.getElementById('stat-sales').textContent = sc||0;
+}
+loadStats();
+
+const rarMap = {L:'Legendary',E:'Epic',R:'Rare',C:'Common'};
+function renderItems(){
+  const grid = document.getElementById('items-grid');
+  const q = (document.getElementById('search-inp')||{}).value||'';
+  let list = [...allItems];
+  if(['L','E','R','C'].includes(activeF)) list = list.filter(i=>i.rareza===activeF);
+  if(activeF==='asc') list.sort((a,b)=>a.precio-b.precio);
+  if(activeF==='desc') list.sort((a,b)=>b.precio-a.precio);
+  if(q) list = list.filter(i=>i.nombre.toLowerCase().includes(q.toLowerCase()));
+  if(!list.length){grid.innerHTML='<div class="empty">No se encontraron ítems</div>';return;}
+  grid.innerHTML = list.map(i=>`
+    <div class="icard" onclick="openModal(${JSON.stringify(i).replace(/"/g,'&quot;')})">
+      <div class="iimg">${i.emoji}<span class="rar rar-${i.rareza}">${(rarMap[i.rareza]||i.rareza).toUpperCase()}</span></div>
+      <div class="ibody">
+        <div class="iname">${i.nombre}</div>
+        <div class="ifooter">
+          <div class="price">S/${i.precio} <span>soles</span></div>
+          <button class="buymini" onclick="event.stopPropagation();openModal(${JSON.stringify(i).replace(/"/g,'&quot;')})">BUY</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function setF(f,el){
+  activeF=f;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  renderItems();
+}
+
+// ── MODAL ──
+function openModal(item){
+  if(typeof item==='string') item=JSON.parse(item);
+  curItem = item;
+  captureB64 = null;
+  document.getElementById('m-emoji').textContent = item.emoji;
+  document.getElementById('m-name').textContent = item.nombre;
+  document.getElementById('m-rar').textContent = (rarMap[item.rareza]||item.rareza)+' · Vendedor: @'+item.vendedor_roblox;
+  document.getElementById('m-price').textContent = 'S/'+item.precio;
+  document.getElementById('m-yape-num').textContent = item.vendedor_yape||'—';
+  document.getElementById('m-yape-amt').textContent = 'S/'+item.precio;
+  document.getElementById('offer-cur').textContent = 'S/'+item.precio;
+  document.getElementById('offer-amt').value = '';
+  document.getElementById('offer-amt').classList.remove('err');
+  document.getElementById('err-offer').classList.remove('show');
+  document.getElementById('preview-img').style.display='none';
+  document.getElementById('uparea').style.display='block';
+  document.getElementById('err-cap').style.display='none';
+  setMode('dir');
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+function closeModalOut(e){if(e.target===document.getElementById('modal'))closeModal();}
+function setMode(m){
+  document.getElementById('sec-dir').style.display = m==='dir'?'block':'none';
+  document.getElementById('sec-off').style.display = m==='off'?'block':'none';
+  document.getElementById('tab-dir').classList.toggle('on',m==='dir');
+  document.getElementById('tab-off').classList.toggle('on',m==='off');
+}
+
+// ── FILE UPLOAD ──
+function handleFile(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  if(!file.type.startsWith('image/')){showToast('Solo se aceptan imágenes','bad');return;}
+  if(file.size > 5*1024*1024){showToast('La imagen es demasiado grande (máx 5MB)','bad');return;}
+  const reader = new FileReader();
+  reader.onload = ev => {
+    captureB64 = ev.target.result;
+    const img = document.getElementById('preview-img');
+    img.src = captureB64;
+    img.style.display = 'block';
+    document.getElementById('uparea').style.display = 'none';
+    document.getElementById('err-cap').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── CONFIRM PURCHASE ──
+async function confirmPurchase(){
+  if(!gUser){showToast('Primero ingresa tu usuario de Roblox','bad');closeModal();goTo('s-guest');return;}
+  if(!captureB64){
+    document.getElementById('err-cap').style.display='block';
+    showToast('Debes subir la captura del comprobante Yape','bad');return;
+  }
+  const btn = document.getElementById('btn-confirmar');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite;font-size:17px"></i>Enviando...';
+  const {error} = await db.from('pedidos').insert({
+    item_id: curItem.id,
+    item_nombre: curItem.nombre,
+    item_emoji: curItem.emoji,
+    comprador_roblox: gUser,
+    vendedor_id: curItem.vendedor_id,
+    vendedor_roblox: curItem.vendedor_roblox,
+    precio: curItem.precio,
+    estado: 'pendiente',
+    captura_url: captureB64,
+    yape_numero: curItem.vendedor_yape
+  });
+  btn.disabled=false;
+  btn.innerHTML='<i class="ti ti-send" style="font-size:17px"></i>Ya yapé — enviar pedido';
+  if(error){showToast('Error al enviar pedido: '+error.message,'bad');return;}
+  closeModal();
+  showToast('¡Pedido enviado! Te avisaremos cuando se verifique.','ok');
+  loadPedidos();
+}
+
+// ── SEND OFFER ──
+async function sendOffer(){
+  if(!gUser){showToast('Primero ingresa tu usuario de Roblox','bad');closeModal();goTo('s-guest');return;}
+  const v = parseFloat(document.getElementById('offer-amt').value);
+  const inp = document.getElementById('offer-amt');
+  const err = document.getElementById('err-offer');
+  if(!v||v<=0){inp.classList.add('err');err.classList.add('show');return;}
+  inp.classList.remove('err');err.classList.remove('show');
+  const {error} = await db.from('ofertas').insert({
+    item_id: curItem.id,
+    item_nombre: curItem.nombre,
+    item_emoji: curItem.emoji,
+    comprador_roblox: gUser,
+    vendedor_id: curItem.vendedor_id,
+    vendedor_roblox: curItem.vendedor_roblox,
+    precio_original: curItem.precio,
+    precio_oferta: v,
+    estado: 'pendiente'
+  });
+  if(error){showToast('Error al enviar oferta','bad');return;}
+  closeModal();
+  showToast('Oferta de S/'+v+' enviada al vendedor.','ok');
+}
+
+// ── PEDIDOS ──
+async function loadPedidos(){
+  if(!gUser) return;
+  const list = document.getElementById('pedidos-list');
+  list.innerHTML='<div class="loader"><i class="ti ti-loader-2"></i>Cargando...</div>';
+  const {data,error} = await db.from('pedidos').select('*').eq('comprador_roblox',gUser).order('created_at',{ascending:false});
+  if(error||!data||!data.length){
+    list.innerHTML='<div style="text-align:center;padding:48px;color:var(--muted);font-size:14px">No tienes pedidos aún</div>';
+    return;
+  }
+  list.innerHTML = data.map(p=>{
+    const stMap = {pendiente:'st-pend',verificado:'st-verif',entregado:'st-done'};
+    const stLbl = {pendiente:'Pago pendiente',verificado:'Pago verificado',entregado:'Entregado ✓'};
+    return `<div class="pcard">
+      <div class="phead"><div class="pname">${p.item_emoji} ${p.item_nombre}</div>
+      <span class="badge ${stMap[p.estado]||'st-pend'}">${stLbl[p.estado]||p.estado}</span></div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">S/${p.precio} · Vendedor: @${p.vendedor_roblox} · ${timeAgo(p.created_at)}</div>
+      ${p.estado==='verificado'?`<div class="tbox"><i class="ti ti-clock"></i>El vendedor tiene 2 horas para entregarte el ítem en Roblox</div>`:''}
+      <div class="chat" id="chat-${p.id}">
+        <div class="clbl">Chat con vendedor</div>
+        <div class="cmsgs" id="msgs-${p.id}"><div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">Cargando mensajes...</div></div>
+        <div class="crow">
+          <input type="text" id="ci-${p.id}" placeholder="Escribe un mensaje...">
+          <button class="csend" onclick="sendMsg('${p.id}','${gUser}')">Enviar</button>
+        </div>
+      </div>
+      ${p.estado==='verificado'?`<button class="cbtn" onclick="confirmDelivery('${p.id}')"><i class="ti ti-check"></i>Confirmar que recibí el ítem en Roblox</button>`:''}
+    </div>`;
+  }).join('');
+  data.forEach(p => loadMsgs(p.id));
+}
+
+async function loadMsgs(pedidoId){
+  const {data} = await db.from('mensajes').select('*').eq('pedido_id',pedidoId).order('created_at');
+  const box = document.getElementById('msgs-'+pedidoId);
+  if(!box) return;
+  if(!data||!data.length){box.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">Sin mensajes aún</div>';return;}
+  box.innerHTML = data.map(m=>`<div class="cmsg ${m.autor===gUser?'me':'them'}"><div class="bbl">${m.texto}</div></div>`).join('');
+  box.scrollTop=box.scrollHeight;
+}
+
+async function sendMsg(pedidoId, autor){
+  const inp = document.getElementById('ci-'+pedidoId);
+  if(!inp||!inp.value.trim()) return;
+  const txt = inp.value.trim();
+  inp.value='';
+  await db.from('mensajes').insert({pedido_id:pedidoId, autor, texto:txt});
+  loadMsgs(pedidoId);
+}
+
+async function confirmDelivery(pedidoId){
+  await db.from('pedidos').update({estado:'entregado'}).eq('id',pedidoId);
+  showToast('Entrega confirmada. El pago fue liberado al vendedor.','ok');
+  loadPedidos();
+}
+
+function timeAgo(ts){
+  const d = (Date.now()-new Date(ts).getTime())/60000;
+  if(d<1) return 'ahora mismo';
+  if(d<60) return 'hace '+Math.floor(d)+' min';
+  if(d<1440) return 'hace '+Math.floor(d/60)+'h';
+  return 'hace '+Math.floor(d/1440)+'d';
+}
+
+// ── TOAST ──
+function showToast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast '+type;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// realtime pedidos
+db.channel('pedidos-realtime').on('postgres_changes',{event:'UPDATE',schema:'public',table:'pedidos'},()=>{
+  if(document.getElementById('s-pedidos').classList.contains('active')) loadPedidos();
+}).subscribe();
+</script>
+</body>
+</html>
