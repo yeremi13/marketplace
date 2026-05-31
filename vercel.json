@@ -1,7 +1,5 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/comprador.html" },
-    { "source": "/vendedor", "destination": "/vendedor.html" },
-    { "source": "/admin", "destination": "/admin.html" }
+    { "source": "/", "destination": "/index.html" }
   ]
 }
