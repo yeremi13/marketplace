@@ -801,19 +801,22 @@ function subscribeToPedido(pedidoId){
       filter: `id=eq.${pedidoId}`
     }, payload => {
       const p = payload.new;
-      const stMap = {pendiente:'st-pend',verificado:'st-verif',entregado:'st-done'};
-      const stLbl = {pendiente:'Pago pendiente',verificado:'Pago verificado',entregado:'Entregado ✓'};
+      const stMap = {pendiente:'st-pend',verificado:'st-verif',entregado_vendedor:'st-verif',entregado:'st-done'};
+      const stLbl = {pendiente:'Pago pendiente',verificado:'Pago verificado',entregado_vendedor:'Entregado por vendedor ✓',entregado:'Completado ✓'};
       const badge = document.getElementById('badge-'+pedidoId);
       if(badge){
         badge.className = 'badge '+(stMap[p.estado]||'st-pend');
         badge.textContent = stLbl[p.estado]||p.estado;
       }
-      // Si cambió a verificado, recargar la card entera para mostrar botones
-      if(p.estado === 'verificado' || p.estado === 'entregado'){
+      // Recargar la card para mostrar/ocultar botones según estado
+      if(p.estado === 'verificado' || p.estado === 'entregado' || p.estado === 'entregado_vendedor'){
         loadPedidos();
       }
       if(p.estado === 'verificado'){
         showToast('🎉 ¡Tu pago fue verificado! El vendedor entregará pronto.','ok');
+      }
+      if(p.estado === 'entregado_vendedor'){
+        showToast('📦 ¡El vendedor marcó la entrega! Confirma que recibiste el ítem.','ok');
       }
     })
     .subscribe();
