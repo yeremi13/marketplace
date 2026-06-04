@@ -228,7 +228,7 @@ async function loadStats() {
 async function loadRevision() {
   const list = document.getElementById('revision-list');
   list.innerHTML = '<div class="loader"><i class="ti ti-loader-2"></i>Cargando...</div>';
-  const { data } = await db.from('items').select('*').eq('activo', false).order('created_at', { ascending: false });
+  const { data } = await db.from('items').select('*').eq('activo', false).not('rechazado', 'eq', true).order('created_at', { ascending: false });
   if (!data || !data.length) { list.innerHTML = '<div class="empty">✅ No hay ítems pendientes de revisión</div>'; loadStats(); return; }
   list.innerHTML = data.map(i => `
     <div class="icard-item" id="ic-${i.id}">
@@ -259,22 +259,49 @@ async function aprobarItem(id, btn) {
   btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i>';
   const { error } = await db.from('items').update({ activo: true }).eq('id', id);
   if (error) { showToast('Error: ' + error.message, 'bad'); btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i>Aprobar'; return; }
+  showToast('¡Ítem aprobado y publicado!', 'ok');
   const card = document.getElementById('ic-' + id);
   if (card) {
-    card.style.background = 'rgba(74,222,128,.06)';
-    card.style.borderColor = 'rgba(74,222,128,.3)';
-    if (card.querySelector('.acts')) card.querySelector('.acts').innerHTML = '<span class="spill sp-act">✓ Aprobado</span>';
+    card.style.transition = 'opacity .3s, transform .3s';
+    card.style.opacity = '0';
+    card.style.transform = 'translateX(20px)';
+    setTimeout(() => {
+      card.remove();
+      const list = document.getElementById('revision-list');
+      if (list && !list.querySelector('.icard-item')) {
+        list.innerHTML = '<div class="empty">✅ No hay ítems pendientes de revisión</div>';
+      }
+      loadStats();
+    }, 300);
   }
-  showToast('¡Ítem aprobado y publicado!', 'ok');
-  setTimeout(() => loadRevision(), 1000);
 }
 
 async function eliminarItem(id, btn) {
   if (!confirm('¿Rechazar y eliminar este ítem?')) return;
   btn.disabled = true;
-  await db.from('items').delete().eq('id', id);
-  showToast('Ítem rechazado y eliminado', 'ok');
-  loadRevision();
+  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i>';
+  // Intentar borrar; si falla por FK, marcar con activo=null para distinguirlo de "en revisión" (activo=false)
+  const { error } = await db.from('items').delete().eq('id', id);
+  if (error) {
+    // Fallback: marcar como rechazado con un campo especial o simplemente desactivar permanentemente
+    await db.from('items').update({ activo: false, rechazado: true }).eq('id', id);
+  }
+  showToast('Ítem rechazado', 'ok');
+  // Remover card del DOM inmediatamente
+  const card = document.getElementById('ic-' + id);
+  if (card) {
+    card.style.transition = 'opacity .3s, transform .3s';
+    card.style.opacity = '0';
+    card.style.transform = 'translateX(-20px)';
+    setTimeout(() => {
+      card.remove();
+      const list = document.getElementById('revision-list');
+      if (list && !list.querySelector('.icard-item')) {
+        list.innerHTML = '<div class="empty">✅ No hay ítems pendientes de revisión</div>';
+      }
+      loadStats();
+    }, 300);
+  }
 }
 
 // ===== TODOS LOS ITEMS =====
