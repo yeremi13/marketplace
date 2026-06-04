@@ -436,6 +436,25 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:var(--text);fo
   <button onclick="closeLightbox()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;width:42px;height:42px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i class="ti ti-x"></i></button>
 </div>
 
+
+<!-- ═══ MODAL CONFIRMAR ENTREGA ═══ -->
+<div class="moverlay" id="confirm-modal">
+  <div class="modal" style="max-width:400px;text-align:center">
+    <div style="font-size:48px;margin-bottom:12px">⚠️</div>
+    <div style="font-family:'Bangers',cursive;font-size:26px;color:var(--brand2);letter-spacing:1px;margin-bottom:10px">¿Estás seguro?</div>
+    <p style="color:var(--text);font-size:14px;line-height:1.7;margin-bottom:8px">¿Confirmas que <strong>recibiste el ítem en Roblox</strong>?</p>
+    <div style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:10px;padding:12px 14px;margin-bottom:20px;font-size:12px;color:#f87171;line-height:1.6">
+      <i class="ti ti-alert-triangle" style="font-size:16px;margin-right:4px"></i>
+      <strong>Recuerda que no habrá reembolso después de confirmar.</strong><br>
+      Al confirmar, el pago se libera al vendedor de forma permanente.
+    </div>
+    <div style="display:flex;gap:10px">
+      <button onclick="cerrarConfirmModal()" style="flex:1;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--text)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Cancelar</button>
+      <button id="confirm-yes-btn" onclick="confirmarEntrega()" style="flex:1;background:var(--success);color:#0a2e0a;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'"><i class="ti ti-check"></i> Sí, confirmar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -766,8 +785,8 @@ async function loadPedidos(){
   }
 
   list.innerHTML = data.map(p=>{
-    const stMap = {pendiente:'st-pend',verificado:'st-verif',entregado:'st-done'};
-    const stLbl = {pendiente:'Pago pendiente',verificado:'Pago verificado',entregado:'Entregado ✓'};
+    const stMap = {pendiente:'st-pend',verificado:'st-verif',entregado_vendedor:'st-verif',entregado:'st-done'};
+    const stLbl = {pendiente:'Pago pendiente',verificado:'Pago verificado',entregado_vendedor:'Entregado por vendedor ✓',entregado:'Completado ✓'};
     return `<div class="pcard" id="pcard-${p.id}">
       <div class="phead">
         <div class="pname">${p.item_emoji} ${p.item_nombre}</div>
@@ -776,6 +795,7 @@ async function loadPedidos(){
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px">S/${p.precio} · Vendedor: @${p.vendedor_roblox} · ${timeAgo(p.created_at)}</div>
       ${p.captura_url ? `<div style="margin-bottom:10px"><a href="${p.captura_url}" target="_blank" style="font-size:11px;color:var(--brand);text-decoration:none;display:inline-flex;align-items:center;gap:4px"><i class="ti ti-photo" style="font-size:14px"></i>Ver comprobante</a></div>` : ''}
       ${p.estado==='verificado' ? `<div class="tbox"><i class="ti ti-clock"></i>El vendedor tiene 2 horas para entregarte el ítem en Roblox</div>` : ''}
+      ${p.estado==='entregado_vendedor' ? `<div class="tbox" style="background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.25)"><i class="ti ti-check" style="color:#4ade80"></i><span style="color:#4ade80">¡El vendedor marcó la entrega! Confirma que recibiste el ítem.</span></div>` : ''}
       <div class="chat">
         <div class="clbl"><div class="live-dot"></div>Chat con vendedor <span style="margin-left:auto;font-size:9px;opacity:.5">TIEMPO REAL</span></div>
         <div class="cmsgs" id="msgs-${p.id}"><div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">Cargando mensajes...</div></div>
@@ -784,7 +804,7 @@ async function loadPedidos(){
           <button class="csend" onclick="sendMsg('${p.id}','${gUser}')"><i class="ti ti-send" style="font-size:13px"></i>Enviar</button>
         </div>
       </div>
-      ${p.estado==='verificado' ? `<button class="cbtn" onclick="confirmDelivery('${p.id}')"><i class="ti ti-check"></i>Confirmar que recibí el ítem en Roblox</button>` : ''}
+      ${p.estado==='entregado_vendedor' ? `<button class="cbtn" onclick="pedirConfirmacion('${p.id}')"><i class="ti ti-check"></i>Confirmar que recibí el ítem en Roblox</button>` : ''}
     </div>`;
   }).join('');
 
@@ -891,6 +911,27 @@ async function sendMsg(pedidoId, autor){
 
   if(btn){ btn.disabled = false; }
   // El realtime subscription se encarga de actualizar el DOM
+}
+
+let _pedidoAConfirmar = null;
+
+function pedirConfirmacion(pedidoId) {
+  _pedidoAConfirmar = pedidoId;
+  document.getElementById('confirm-modal').classList.add('open');
+}
+
+function cerrarConfirmModal() {
+  _pedidoAConfirmar = null;
+  document.getElementById('confirm-modal').classList.remove('open');
+}
+
+async function confirmarEntrega() {
+  if (!_pedidoAConfirmar) return;
+  const btn = document.getElementById('confirm-yes-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> Confirmando...';
+  await confirmDelivery(_pedidoAConfirmar);
+  cerrarConfirmModal();
 }
 
 async function confirmDelivery(pedidoId){
