@@ -618,19 +618,38 @@ async function loadPedidos(){
     const stMap = {pendiente:'st-pend',verificado:'st-verif',entregado_vendedor:'st-verif',entregado:'st-done'};
     const stLbl = {pendiente:'Pago pendiente',verificado:'Pago verificado',entregado_vendedor:'Entregado por vendedor ✓',entregado:'Completado ✓'};
     return `<div class="pcard" id="pcard-${p.id}">
+
+      <!-- Encabezado: nombre + badge estado -->
       <div class="phead">
         <div class="pname">${p.item_emoji} ${p.item_nombre}</div>
         <span class="badge ${stMap[p.estado]||'st-pend'}" id="badge-${p.id}">${stLbl[p.estado]||p.estado}</span>
       </div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">S/${p.precio} · Vendedor: @${p.vendedor_roblox} · ${timeAgo(p.created_at)}</div>
-      ${p.oferta_id ? `<div class="ibox2" style="margin-bottom:10px"><i class="ti ti-tag"></i><span>Pedido creado desde una <strong>oferta aceptada</strong> · precio negociado S/${p.precio}</span></div>` : ''}
-      ${p.estado==='pendiente' && p.yape_numero && !p.captura_url ? `<div class="yapebox" style="margin-bottom:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:6px">Yape al número del vendedor y sube el comprobante aquí abajo 👇</div><div class="ynum">${p.yape_numero}</div><div class="yamount">S/ ${p.precio}</div></div>` : ''}
+
+      <!-- Metadata -->
+      <div class="pmeta">S/${p.precio} · Vendedor: @${p.vendedor_roblox} · ${timeAgo(p.created_at)}</div>
+
+      <!-- Badge oferta -->
+      ${p.oferta_id ? `<div class="ibox2"><i class="ti ti-tag"></i><span>Pedido desde una <strong>oferta aceptada</strong> · precio negociado S/${p.precio}</span></div>` : ''}
+
+      <!-- Yape box (solo si pendiente y sin comprobante) -->
+      ${p.estado==='pendiente' && p.yape_numero && !p.captura_url ? `
+      <div class="yapebox">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Yape al número del vendedor y sube el comprobante con el 📷 del chat 👇</div>
+        <div class="ynum">${p.yape_numero}</div>
+        <div class="yamount">S/ ${p.precio}</div>
+      </div>` : ''}
+
+      <!-- Estado comprobante -->
       ${p.captura_url
         ? `<div class="cap-ok"><i class="ti ti-circle-check"></i>Comprobante enviado · <a href="${p.captura_url}" target="_blank" style="color:inherit;text-decoration:underline">ver imagen</a></div>`
         : (p.estado==='pendiente' ? `<div class="cap-pending" id="cap-warn-${p.id}"><i class="ti ti-alert-triangle"></i>Sube el comprobante Yape para que el admin verifique tu pago</div>` : '')
       }
+
+      <!-- Info estado verificado / entregado -->
       ${p.estado==='verificado' ? `<div class="tbox"><i class="ti ti-clock"></i>El vendedor tiene 2 horas para entregarte el ítem en Roblox</div>` : ''}
-      ${p.estado==='entregado_vendedor' ? `<div class="tbox" style="background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.25)"><i class="ti ti-check" style="color:#4ade80"></i><span style="color:#4ade80">¡El vendedor marcó la entrega! Confirma que recibiste el ítem.</span></div>` : ''}
+      ${p.estado==='entregado_vendedor' ? `<div class="tbox" style="background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.25)"><i class="ti ti-check" style="color:#4ade80"></i><span style="color:#4ade80">¡El vendedor marcó la entrega! Confirma abajo que recibiste el ítem.</span></div>` : ''}
+
+      <!-- Chat -->
       <div class="chat">
         <div class="clbl"><div class="live-dot"></div>Chat con vendedor <span style="margin-left:auto;font-size:9px;opacity:.5">TIEMPO REAL</span></div>
         <div class="cmsgs" id="msgs-${p.id}"><div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">Cargando mensajes...</div></div>
@@ -643,7 +662,10 @@ async function loadPedidos(){
           <button class="csend" onclick="sendMsg('${p.id}','${gUser}')"><i class="ti ti-send" style="font-size:13px"></i>Enviar</button>
         </div>
       </div>
-      ${p.estado==='entregado_vendedor' ? `<button class="cbtn" onclick="pedirConfirmacion('${p.id}')"><i class="ti ti-check"></i>Confirmar que recibí el ítem en Roblox</button>` : ''}
+
+      <!-- Botón confirmar entrega (separado del chat) -->
+      ${p.estado==='entregado_vendedor' ? `<button class="cbtn" onclick="pedirConfirmacion('${p.id}')"><i class="ti ti-check" style="font-size:18px"></i>Confirmar que recibí el ítem en Roblox</button>` : ''}
+
     </div>`;
   }).join('');
 
