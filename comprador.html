@@ -624,14 +624,21 @@ async function loadPedidos(){
       </div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px">S/${p.precio} · Vendedor: @${p.vendedor_roblox} · ${timeAgo(p.created_at)}</div>
       ${p.oferta_id ? `<div class="ibox2" style="margin-bottom:10px"><i class="ti ti-tag"></i><span>Pedido creado desde una <strong>oferta aceptada</strong> · precio negociado S/${p.precio}</span></div>` : ''}
-      ${p.estado==='pendiente' && p.yape_numero && !p.captura_url ? `<div class="yapebox" style="margin-bottom:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:6px">⚠️ Debes pagar por Yape y subir el comprobante desde el catálogo</div><div class="ynum">${p.yape_numero}</div><div class="yamount">S/ ${p.precio}</div><div class="yhint">Yape al vendedor · luego ve al catálogo y sube el comprobante</div></div>` : ''}
-      ${p.captura_url ? `<div style="margin-bottom:10px"><a href="${p.captura_url}" target="_blank" style="font-size:11px;color:var(--brand);text-decoration:none;display:inline-flex;align-items:center;gap:4px"><i class="ti ti-photo" style="font-size:14px"></i>Ver comprobante</a></div>` : ''}
+      ${p.estado==='pendiente' && p.yape_numero && !p.captura_url ? `<div class="yapebox" style="margin-bottom:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:6px">Yape al número del vendedor y sube el comprobante aquí abajo 👇</div><div class="ynum">${p.yape_numero}</div><div class="yamount">S/ ${p.precio}</div></div>` : ''}
+      ${p.captura_url
+        ? `<div class="cap-ok"><i class="ti ti-circle-check"></i>Comprobante enviado · <a href="${p.captura_url}" target="_blank" style="color:inherit;text-decoration:underline">ver imagen</a></div>`
+        : (p.estado==='pendiente' ? `<div class="cap-pending" id="cap-warn-${p.id}"><i class="ti ti-alert-triangle"></i>Sube el comprobante Yape para que el admin verifique tu pago</div>` : '')
+      }
       ${p.estado==='verificado' ? `<div class="tbox"><i class="ti ti-clock"></i>El vendedor tiene 2 horas para entregarte el ítem en Roblox</div>` : ''}
       ${p.estado==='entregado_vendedor' ? `<div class="tbox" style="background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.25)"><i class="ti ti-check" style="color:#4ade80"></i><span style="color:#4ade80">¡El vendedor marcó la entrega! Confirma que recibiste el ítem.</span></div>` : ''}
       <div class="chat">
         <div class="clbl"><div class="live-dot"></div>Chat con vendedor <span style="margin-left:auto;font-size:9px;opacity:.5">TIEMPO REAL</span></div>
         <div class="cmsgs" id="msgs-${p.id}"><div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">Cargando mensajes...</div></div>
         <div class="crow">
+          <label class="cattach" title="Adjuntar imagen / comprobante">
+            <i class="ti ti-photo" style="font-size:16px"></i>
+            <input type="file" accept="image/*" onchange="sendImgMsg('${p.id}','${gUser}',this,${p.captura_url?'false':'true'})">
+          </label>
           <input type="text" id="ci-${p.id}" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')sendMsg('${p.id}','${gUser}')">
           <button class="csend" onclick="sendMsg('${p.id}','${gUser}')"><i class="ti ti-send" style="font-size:13px"></i>Enviar</button>
         </div>
@@ -661,12 +668,61 @@ function renderMsgs(pedidoId, msgs){
     box.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">Sin mensajes aún. Escríbele al vendedor.</div>';
     return;
   }
-  box.innerHTML = msgs.map(m=>`
-    <div class="cmsg ${m.autor===gUser?'me':'them'}">
-      <div class="bbl">${escHtml(m.texto)}</div>
-      <div class="ts">${m.autor===gUser?'Tú':'@'+m.autor} · ${timeAgo(m.created_at)}</div>
-    </div>`).join('');
+  box.innerHTML = msgs.map(m=>{
+    const isMe = m.autor===gUser;
+    let bbl;
+    if(m.tipo==='imagen' && m.imagen_url){
+      bbl = `<img src="${m.imagen_url}" class="chat-img" alt="imagen" onclick="openImgModal('${m.imagen_url}')">`;
+    } else {
+      bbl = escHtml(m.texto||'');
+    }
+    return `<div class="cmsg ${isMe?'me':'them'}">
+      <div class="bbl">${bbl}</div>
+      <div class="ts">${isMe?'Tú':'@'+m.autor} · ${timeAgo(m.created_at)}</div>
+    </div>`;
+  }).join('');
   box.scrollTop = box.scrollHeight;
+}
+
+// ── ENVIAR IMAGEN EN CHAT ──
+async function sendImgMsg(pedidoId, autor, input, esComprobante){
+  const file = input.files[0];
+  input.value = '';
+  if(!file) return;
+  if(!file.type.startsWith('image/')){ showToast('Solo se aceptan imágenes','bad'); return; }
+  if(file.size > 5*1024*1024){ showToast('Imagen muy grande (máx 5MB)','bad'); return; }
+
+  showToast('Subiendo imagen...','ok');
+  const ext  = file.name.split('.').pop();
+  const path = `chat_${pedidoId}_${autor}_${Date.now()}.${ext}`;
+
+  const { data, error } = await db.storage.from('comprobantes').upload(path, file, { cacheControl:'3600', upsert:false });
+  if(error){ showToast('Error al subir imagen: '+error.message,'bad'); return; }
+
+  const { data: urlData } = db.storage.from('comprobantes').getPublicUrl(data.path);
+  const imgUrl = urlData.publicUrl;
+
+  // Guardar como mensaje de tipo imagen
+  await db.from('mensajes').insert({ pedido_id: pedidoId, autor, texto: '[imagen]', tipo: 'imagen', imagen_url: imgUrl });
+
+  // Si es el primer comprobante del pedido, actualizar captura_url del pedido
+  if(esComprobante){
+    await db.from('pedidos').update({ captura_url: imgUrl }).eq('id', pedidoId);
+    // Ocultar el aviso de comprobante pendiente
+    const warn = document.getElementById('cap-warn-'+pedidoId);
+    if(warn) warn.outerHTML = `<div class="cap-ok"><i class="ti ti-circle-check"></i>Comprobante enviado · <a href="${imgUrl}" target="_blank" style="color:inherit;text-decoration:underline">ver imagen</a></div>`;
+    showToast('✅ Comprobante enviado al admin para verificación','ok');
+  } else {
+    showToast('Imagen enviada','ok');
+  }
+}
+
+// ── ABRIR IMAGEN MODAL ──
+function openImgModal(url){
+  const lb = document.getElementById('lightbox');
+  document.getElementById('lightbox-img').src = url;
+  lb.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
 }
 
 function escHtml(str){
@@ -687,9 +743,16 @@ function subscribeToMsgs(pedidoId){
       const box = document.getElementById('msgs-'+pedidoId);
       if(!box) return;
       const m = payload.new;
+      const isMe = m.autor===gUser;
       const div = document.createElement('div');
-      div.className = 'cmsg '+(m.autor===gUser?'me':'them');
-      div.innerHTML = `<div class="bbl">${escHtml(m.texto)}</div><div class="ts">${m.autor===gUser?'Tú':'@'+m.autor} · ahora</div>`;
+      div.className = 'cmsg '+(isMe?'me':'them');
+      let bbl;
+      if(m.tipo==='imagen' && m.imagen_url){
+        bbl = `<img src="${m.imagen_url}" class="chat-img" alt="imagen" onclick="openImgModal('${m.imagen_url}')">`;
+      } else {
+        bbl = escHtml(m.texto||'');
+      }
+      div.innerHTML = `<div class="bbl">${bbl}</div><div class="ts">${isMe?'Tú':'@'+m.autor} · ahora</div>`;
       // Quitar el placeholder si existe
       const placeholder = box.querySelector('[style*="text-align:center"]');
       if(placeholder) placeholder.remove();
