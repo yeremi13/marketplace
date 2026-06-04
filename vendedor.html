@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BrainrotMarket - Panel Vendedor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="s-login" class="screen active">
+<div class="shell">
+<aside class="sidebar" id="sb-login">
+  <div class="sb-logo"><div class="dot"></div><div class="logo">Brainrot<span>Market</span></div></div>
+  <nav class="sb-nav">
+    <button class="sni" onclick="window.location.href='comprador.html'"><i class="ti ti-home"></i>Inicio</button>
+    <button class="sni on"><i class="ti ti-store"></i>Panel vendedor</button>
+  </nav>
+</aside>
+<div class="sov" onclick="cs()"></div>
+<div class="main">
+  <div class="topbar">
+    <button class="hbg" onclick="ts()"><i class="ti ti-menu-2"></i></button>
+    <button class="back" onclick="window.location.href='comprador.html'"><i class="ti ti-arrow-left"></i></button>
+    <span class="ttitle">Panel vendedor</span>
+  </div>
+  <div class="content" style="max-width:580px">
+    <div class="fcard">
+      <h2>Iniciar sesión</h2>
+      <p class="sub">Accede a tu panel para gestionar ítems y pedidos.</p>
+      <div class="field">
+        <label>Correo electrónico</label>
+        <input id="l-email" type="email" placeholder="tu@correo.com">
+        <div class="ferr" id="err-lemail">Ingresa un correo válido</div>
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input id="l-pass" type="password" placeholder="••••••••">
+        <div class="ferr" id="err-lpass">Ingresa tu contraseña</div>
+      </div>
+      <div class="ferr show" id="err-login" style="display:none;margin-bottom:8px;font-size:13px"></div>
+      <button class="btn-full" id="btn-login" onclick="doLogin()"><i class="ti ti-login" style="font-size:17px"></i>Iniciar sesión</button>
+      <div style="text-align:center;margin:16px 0;font-size:13px;color:var(--muted)">
+        ¿No tienes cuenta? <span style="color:var(--brand);cursor:pointer;font-weight:700" onclick="goTo('s-registro')">Regístrate aquí</span>
+      </div>
+      <button class="btn-out" onclick="window.location.href='comprador.html'">Volver al inicio</button>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ═══ REGISTRO ═══ -->
+<div id="s-registro" class="screen">
+<div class="shell">
+<aside class="sidebar" id="sb-reg">
+  <div class="sb-logo"><div class="dot"></div><div class="logo">Brainrot<span>Market</span></div></div>
+  <nav class="sb-nav">
+    <button class="sni" onclick="goTo('s-login');cs()"><i class="ti ti-arrow-left"></i>Volver al login</button>
+    <button class="sni on"><i class="ti ti-user-plus"></i>Registro</button>
+  </nav>
+</aside>
+<div class="sov" onclick="cs()"></div>
+<div class="main">
+  <div class="topbar">
+    <button class="hbg" onclick="ts()"><i class="ti ti-menu-2"></i></button>
+    <button class="back" onclick="goTo('s-login')"><i class="ti ti-arrow-left"></i></button>
+    <span class="ttitle">Crear cuenta</span>
+  </div>
+  <div class="content" style="max-width:580px">
+    <div class="fcard">
+      <h2>Crear cuenta gratis</h2>
+      <p class="sub">Necesitamos estos datos para poder pagarte tus ventas y contactarte.</p>
+      <div class="ibox"><i class="ti ti-info-circle"></i><span>Comisión del 8% por venta exitosa. Tus ítems serán revisados antes de publicarse (máx 24h).</span></div>
+      <div class="field">
+        <label>Usuario de Roblox</label>
+        <input id="r-roblox" type="text" placeholder="@TuUsuarioRoblox" autocomplete="off">
+        <div class="ferr" id="err-rroblox">El usuario de Roblox es obligatorio</div>
+      </div>
+      <div class="field">
+        <label>Nombre completo</label>
+        <input id="r-nombre" type="text" placeholder="Tu nombre real">
+        <div class="ferr" id="err-rnombre">El nombre es obligatorio</div>
+      </div>
+      <div class="field">
+        <label>Número Yape (para recibir pagos)</label>
+        <input id="r-yape" type="tel" placeholder="9XX XXX XXX" maxlength="9">
+        <div class="ferr" id="err-ryape">Ingresa un número Yape válido (9 dígitos)</div>
+      </div>
+      <div class="field">
+        <label>Correo electrónico</label>
+        <input id="r-email" type="email" placeholder="tu@correo.com">
+        <div class="ferr" id="err-remail">Ingresa un correo válido</div>
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input id="r-pass" type="password" placeholder="Mínimo 8 caracteres">
+        <div class="ferr" id="err-rpass">La contraseña debe tener al menos 8 caracteres</div>
+      </div>
+      <div class="ferr show" id="err-reg" style="display:none;margin-bottom:8px;font-size:13px"></div>
+      <button class="btn-full" id="btn-reg" onclick="doRegistro()"><i class="ti ti-user-plus" style="font-size:17px"></i>Crear cuenta gratis</button>
+      <button class="btn-out" onclick="goTo('s-login')">Ya tengo cuenta</button>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div id="s-dash" class="screen">
+<div class="shell">
+<aside class="sidebar" id="sb-dash">
+  <div class="sb-logo"><div class="dot"></div><div class="logo">Brainrot<span>Market</span></div></div>
+  <div class="sb-user">
+    <div class="avatar" id="av-sb">—</div>
+    <div><div class="sb-uname" id="uname-sb">@vendedor</div><div class="sb-urole">vendedor</div></div>
+  </div>
+  <nav class="sb-nav">
+    <button class="sni on" id="nav-inicio" onclick="goTab('inicio');cs()"><i class="ti ti-home"></i>Inicio</button>
+    <button class="sni" id="nav-items" onclick="goTab('items');cs()"><i class="ti ti-package"></i>Mis ítems</button>
+    <button class="sni" id="nav-pedidos" onclick="goTab('pedidos');cs()"><i class="ti ti-shopping-cart"></i>Pedidos<span class="snbadge" id="badge-p" style="display:none">0</span></button>
+    <button class="sni" id="nav-ofertas" onclick="goTab('ofertas');cs()"><i class="ti ti-tag"></i>Ofertas<span class="snbadge" id="badge-o" style="display:none">0</span></button>
+    <button class="sni" id="nav-subir" onclick="goTab('subir');cs()"><i class="ti ti-plus"></i>Subir ítem</button>
+  </nav>
+  <div class="sb-foot">
+    <button class="sni" onclick="goTo('s-perfil');cs()"><i class="ti ti-user"></i>Mi perfil</button>
+    <button class="sni" style="color:var(--danger)" onclick="doLogout()"><i class="ti ti-logout"></i>Cerrar sesión</button>
+  </div>
+</aside>
+<div class="sov" onclick="cs()"></div>
+<div class="main">
+  <div class="topbar">
+    <button class="hbg" onclick="ts()"><i class="ti ti-menu-2"></i></button>
+    <span class="ttitle" id="topbar-lbl">Panel vendedor</span>
+    <div class="spacer"></div>
+    <div class="bellwrap">
+      <button class="bellbtn" onclick="goTab('pedidos')"><i class="ti ti-bell"></i><span class="bellcount" id="bell-count"></span></button>
+    </div>
+    <div class="avatar" id="av-top" style="margin-left:4px;cursor:pointer" onclick="goTo('s-perfil')">—</div>
+  </div>
+  <div class="content">
+    <div class="tabbar">
+      <button class="tbtn on" id="tb-inicio" onclick="goTab('inicio')"><i class="ti ti-home"></i>Inicio</button>
+      <button class="tbtn" id="tb-items" onclick="goTab('items')"><i class="ti ti-package"></i>Mis ítems</button>
+      <button class="tbtn" id="tb-pedidos" onclick="goTab('pedidos')"><i class="ti ti-shopping-cart"></i>Pedidos</button>
+      <button class="tbtn" id="tb-ofertas" onclick="goTab('ofertas')"><i class="ti ti-tag"></i>Ofertas</button>
+      <button class="tbtn" id="tb-subir" onclick="goTab('subir')"><i class="ti ti-plus"></i>Subir ítem</button>
+    </div>
+
+    <!-- INICIO -->
+    <div id="tab-inicio" class="tab active">
+      <div style="margin-bottom:18px">
+        <div style="font-size:13px;color:var(--muted)">Bienvenido de vuelta,</div>
+        <div style="font-family:'Bangers',cursive;font-size:26px;color:var(--brand2);letter-spacing:1px" id="welcome-name">@vendedor</div>
+      </div>
+      <div class="sgrid">
+        <div class="sbox"><div class="snum" style="color:var(--brand)" id="st-ganancias">S/0</div><div class="slbl">Ganancias del mes</div></div>
+        <div class="sbox"><div class="snum" style="color:var(--brand2)" id="st-ventas">0</div><div class="slbl">Ventas totales</div></div>
+        <div class="sbox"><div class="snum" style="color:var(--success)" id="st-activos">0</div><div class="slbl">Ítems activos</div></div>
+        <div class="sbox"><div class="snum" style="color:var(--purple)" id="st-rep">5.0★</div><div class="slbl">Reputación</div></div>
+      </div>
+      <div class="abox" id="alert-pedidos" style="display:none" onclick="goTab('pedidos')">
+        <i class="ti ti-alert-triangle" style="font-size:22px;color:var(--brand);flex-shrink:0"></i>
+        <div style="flex:1"><div class="abox-title" id="alert-title">Pedidos pendientes</div><div class="abox-sub">Haz clic para ver los detalles</div></div>
+        <i class="ti ti-chevron-right" style="font-size:18px;color:var(--muted);flex-shrink:0"></i>
+      </div>
+      <div class="ibox"><i class="ti ti-info-circle"></i><span>Tienes hasta 2 horas para entregar cada pedido una vez verificado el pago. Comisión del 8% por venta.</span></div>
+    </div>
+
+    <!-- MIS ITEMS -->
+    <div id="tab-items" class="tab">
+      <div class="stitle">Mis ítems publicados</div>
+      <div id="items-list"><div class="loader"><i class="ti ti-loader-2"></i>Cargando...</div></div>
+    </div>
+
+    <!-- PEDIDOS -->
+    <div id="tab-pedidos" class="tab">
+      <div class="stitle">Pedidos activos</div>
+      <div id="pedidos-list"><div class="loader"><i class="ti ti-loader-2"></i>Cargando...</div></div>
+    </div>
+
+    <!-- OFERTAS -->
+    <div id="tab-ofertas" class="tab">
+      <div class="stitle">Ofertas recibidas</div>
+      <div id="ofertas-list"><div class="loader"><i class="ti ti-loader-2"></i>Cargando...</div></div>
+    </div>
+
+    <!-- SUBIR ITEM -->
+    <div id="tab-subir" class="tab">
+      <div class="stitle">Publicar nuevo ítem</div>
+      <div class="fcard">
+        <div class="field">
+          <label>Nombre del ítem</label>
+          <input id="s-nombre" type="text" placeholder="Ej: Tralalero Tralala">
+          <div class="ferr" id="err-snombre">El nombre es obligatorio</div>
+        </div>
+        <div class="field">
+          <label>Emoji del ítem</label>
+          <input id="s-emoji" type="text" placeholder="🎮" maxlength="4">
+          <div class="ferr" id="err-semoji">Pon un emoji</div>
+        </div>
+        <div class="field">
+          <label>Rareza</label>
+          <div class="rarsel">
+            <div class="ropt" onclick="selRar(this,'L')">⭐ Legendary</div>
+            <div class="ropt" onclick="selRar(this,'E')">💜 Epic</div>
+            <div class="ropt" onclick="selRar(this,'R')">💙 Rare</div>
+            <div class="ropt" onclick="selRar(this,'C')">Common</div>
+          </div>
+          <div class="ferr" id="err-srar">Selecciona una rareza</div>
+        </div>
+        <div class="field">
+          <label>Precio (soles)</label>
+          <input id="s-precio" type="number" placeholder="Ej: 45" min="1">
+          <div class="ferr" id="err-sprecio">Ingresa un precio válido</div>
+        </div>
+        <div class="field">
+          <label>Descripción</label>
+          <textarea id="s-desc" placeholder="Describe el ítem, nivel, estado, etc."></textarea>
+        </div>
+        <div class="field">
+          <label>Stock (unidades disponibles)</label>
+          <input id="s-stock" type="number" placeholder="Ej: 1" min="1" max="999">
+          <div class="ferr" id="err-sstock">Ingresa el stock disponible (mínimo 1)</div>
+        </div>
+        <div class="field">
+          <label>Foto del producto</label>
+          <div class="foto-upload" id="foto-drop">
+            <input type="file" id="s-foto" accept="image/*" onchange="previewFoto(this)">
+            <i class="ti ti-photo"></i>
+            <div class="ft">Arrastra una foto o <span>haz clic para seleccionar</span></div>
+            <div class="ft" style="margin-top:4px;font-size:11px">JPG, PNG o WEBP · máx. 3MB</div>
+          </div>
+          <img id="foto-preview" class="foto-preview" alt="Vista previa">
+          <div class="ferr" id="err-sfoto">La imagen no debe superar 3MB</div>
+        </div>
+        <div class="ibox"><i class="ti ti-info-circle"></i><span>Tu ítem será revisado por el admin antes de publicarse (máx 24h). Comisión del 8% por venta exitosa.</span></div>
+        <button class="btn-full" id="btn-subir" onclick="subirItem()"><i class="ti ti-upload" style="font-size:17px"></i>Publicar ítem</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ═══ PERFIL ═══ -->
+<div id="s-perfil" class="screen">
+<div class="shell">
+<aside class="sidebar">
+  <div class="sb-logo"><div class="dot"></div><div class="logo">Brainrot<span>Market</span></div></div>
+  <nav class="sb-nav">
+    <button class="sni" onclick="goTo('s-dash');cs()"><i class="ti ti-arrow-left"></i>Volver al panel</button>
+    <button class="sni on"><i class="ti ti-user"></i>Mi perfil</button>
+  </nav>
+</aside>
+<div class="sov" onclick="cs()"></div>
+<div class="main">
+  <div class="topbar">
+    <button class="hbg" onclick="ts()"><i class="ti ti-menu-2"></i></button>
+    <button class="back" onclick="goTo('s-dash')"><i class="ti ti-arrow-left"></i></button>
+    <span class="ttitle">Mi perfil</span>
+  </div>
+  <div class="content" style="max-width:580px">
+    <div class="ph">
+      <div class="pav" id="pav-big">—</div>
+      <div class="pun" id="p-username">@vendedor</div>
+      <div class="pm" id="p-meta">vendedor · 0 ventas · 5.0★</div>
+    </div>
+    <div class="fcard">
+      <div class="field"><label>Usuario de Roblox</label><input id="p-roblox" type="text"></div>
+      <div class="field"><label>Nombre completo</label><input id="p-nombre" type="text"></div>
+      <div class="field"><label>Número Yape</label><input id="p-yape" type="tel" maxlength="9"></div>
+      <div class="field"><label>Correo electrónico</label><input id="p-email" type="email" disabled style="opacity:.6"></div>
+      <button class="btn-full" onclick="guardarPerfil()"><i class="ti ti-check" style="font-size:17px"></i>Guardar cambios</button>
+      <button class="btn-out" style="color:var(--danger);border-color:rgba(248,113,113,.3);margin-top:12px" onclick="doLogout()">Cerrar sesión</button>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- modal imagen -->
+<div class="imgmodal" id="imgmodal" onclick="this.classList.remove('open')">
+  <img id="imgmodal-src" src="" alt="captura">
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/common.js"></script>
+<script>
+// ===== VARIABLES GLOBALES =====
+let vSession = null;
+let selRarVal = '';
+
+// ===== NAVEGACIÓN =====
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function ts() { toggleSidebar(); }
+function cs() { closeSidebar(); }
+
+function goTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('.sni').forEach(b => b.classList.remove('on'));
+  const n = document.getElementById('nav-' + tab);
+  if (n) n.classList.add('on');
+  document.querySelectorAll('.tbtn').forEach(b => b.classList.remove('on'));
+  const tb = document.getElementById('tb-' + tab);
+  if (tb) tb.classList.add('on');
+  const labels = { inicio: 'Panel vendedor', items: 'Mis ítems', pedidos: 'Pedidos', ofertas: 'Ofertas', subir: 'Publicar ítem' };
+  document.getElementById('topbar-lbl').textContent = labels[tab] || 'Panel vendedor';
+  if (tab === 'items') loadItems();
+  if (tab === 'pedidos') loadPedidos();
+  if (tab === 'ofertas') loadOfertas();
+}
+
+// ===== REGISTRO =====
+async function doRegistro() {
+  const ok = validate([
+    { id: 'r-roblox', errId: 'err-rroblox', check: v => v.trim().length > 0 },
+    { id: 'r-nombre', errId: 'err-rnombre', check: v => v.trim().length > 0 },
+    { id: 'r-yape', errId: 'err-ryape', check: v => isValidYape(v.trim()) },
+    { id: 'r-email', errId: 'err-remail', check: v => isValidEmail(v.trim()) },
+    { id: 'r-pass', errId: 'err-rpass', check: v => v.length >= 8 }
+  ]);
+  if (!ok) return;
+  
+  const btn = document.getElementById('btn-reg');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite;font-size:17px"></i>Creando cuenta...';
+  const errBox = document.getElementById('err-reg');
+  errBox.style.display = 'none';
+  
+  const email = document.getElementById('r-email').value.trim();
+  const roblox = document.getElementById('r-roblox').value.trim();
+  
+  const { data: existe } = await db.from('vendedores').select('id').or(`email.eq.${email},roblox_user.eq.${roblox}`).maybeSingle();
+  if (existe) {
+    errBox.textContent = 'Ese correo o usuario de Roblox ya está registrado.';
+    errBox.style.display = 'block';
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-user-plus" style="font-size:17px"></i>Crear cuenta gratis';
+    return;
+  }
+  
+  const hash = await hashPassword(document.getElementById('r-pass').value);
+  const { data, error } = await db.from('vendedores').insert({
+    email,
+    roblox_user: roblox,
+    nombre: document.getElementById('r-nombre').value.trim(),
+    yape: document.getElementById('r-yape').value.trim(),
+    password_hash: hash
+  }).select().single();
+  
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-user-plus" style="font-size:17px"></i>Crear cuenta gratis';
+  if (error) { errBox.textContent = 'Error: ' + error.message; errBox.style.display = 'block'; return; }
+  showToast('¡Cuenta creada! Bienvenido.', 'ok');
+  loginSession(data);
+}
+
+// ===== LOGIN =====
+async function doLogin() {
+  const ok = validate([
+    { id: 'l-email', errId: 'err-lemail', check: v => isValidEmail(v.trim()) },
+    { id: 'l-pass', errId: 'err-lpass', check: v => v.length > 0 }
+  ]);
+  if (!ok) return;
+  
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite;font-size:17px"></i>Entrando...';
+  const errBox = document.getElementById('err-login');
+  errBox.style.display = 'none';
+  
+  const email = document.getElementById('l-email').value.trim();
+  const hash = await hashPassword(document.getElementById('l-pass').value);
+  const { data, error } = await db.from('vendedores').select('*').eq('email', email).eq('password_hash', hash).maybeSingle();
+  
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-login" style="font-size:17px"></i>Iniciar sesión';
+  if (error || !data) {
+    errBox.textContent = 'Correo o contraseña incorrectos.';
+    errBox.style.display = 'block';
+    return;
+  }
+  loginSession(data);
+}
+
+function loginSession(vend) {
+  vSession = vend;
+  localStorage.setItem('brainrot_session', JSON.stringify(vend));
+  updateUI();
+  goTo('s-dash');
+  loadDashStats();
+  loadPedidos();
+  loadOfertas();
+}
+
+function updateUI() {
+  if (!vSession) return;
+  const initials = vSession.roblox_user.slice(0, 2).toUpperCase();
+  document.querySelectorAll('.avatar').forEach(a => a.textContent = initials);
+  document.getElementById('uname-sb').textContent = '@' + vSession.roblox_user;
+  document.getElementById('welcome-name').textContent = '@' + vSession.roblox_user;
+  document.getElementById('p-username').textContent = '@' + vSession.roblox_user;
+  document.getElementById('p-meta').textContent = 'vendedor · ' + (vSession.ventas || 0) + ' ventas · ' + (vSession.reputacion || 5.0) + '★';
+  document.getElementById('p-roblox').value = vSession.roblox_user;
+  document.getElementById('p-nombre').value = vSession.nombre;
+  document.getElementById('p-yape').value = vSession.yape;
+  document.getElementById('p-email').value = vSession.email;
+  document.getElementById('pav-big').textContent = initials;
+  document.getElementById('st-rep').textContent = (vSession.reputacion || 5.0) + '★';
+}
+
+function doLogout() {
+  localStorage.removeItem('brainrot_session');
+  vSession = null;
+  goTo('s-login');
+}
+
+// ===== VALIDACIÓN =====
+function validate(fields) {
+  let ok = true;
+  fields.forEach(({ id, errId, check, msg }) => {
+    const el = document.getElementById(id);
+    const err = document.getElementById(errId);
+    if (!check(el.value)) {
+      el.classList.add('err');
+      if (msg) err.textContent = msg;
+      err.classList.add('show');
+      ok = false;
+    } else {
+      el.classList.remove('err');
+      err.classList.remove('show');
+    }
+  });
+  return ok;
+}
+
+// ===== DASH STATS =====
+async function loadDashStats() {
+  if (!vSession) return;
+  const { count: activos } = await db.from('items').select('*', { count: 'exact', head: true }).eq('vendedor_id', vSession.id).eq('activo', true);
+  const { data: pedidos } = await db.from('pedidos').select('precio,estado,created_at').eq('vendedor_id', vSession.id);
+  const { count: ofertas } = await db.from('ofertas').select('*', { count: 'exact', head: true }).eq('vendedor_id', vSession.id).eq('estado', 'pendiente');
+  
+  const now = new Date();
+  const mes = now.getMonth();
+  const yr = now.getFullYear();
+  const ganMes = (pedidos || []).filter(p => p.estado === 'entregado' && new Date(p.created_at).getMonth() === mes && new Date(p.created_at).getFullYear() === yr).reduce((s, p) => s + p.precio * 0.92, 0);
+  const pendCount = (pedidos || []).filter(p => p.estado === 'pendiente' || p.estado === 'verificado').length;
+  
+  document.getElementById('st-ganancias').textContent = 'S/' + ganMes.toFixed(0);
+  document.getElementById('st-ventas').textContent = vSession.ventas || 0;
+  document.getElementById('st-activos').textContent = activos || 0;
+  
+  if (pendCount > 0) {
+    document.getElementById('alert-pedidos').style.display = 'flex';
+    document.getElementById('alert-title').textContent = pendCount + ' pedido' + (pendCount > 1 ? 's' : '') + ' pendiente' + (pendCount > 1 ? 's' : '');
+    const bp = document.getElementById('badge-p');
+    bp.textContent = pendCount;
+    bp.style.display = 'inline';
+    const bc = document.getElementById('bell-count');
+    bc.textContent = pendCount;
+    bc.classList.add('show');
+  }
+  if (ofertas > 0) {
+    const bo = document.getElementById('badge-o');
+    bo.textContent = ofertas;
+    bo.style.display = 'inline';
+  }
+}
+
+// ===== MIS ITEMS =====
+async function loadItems() {
+  if (!vSession) return;
+  const list = document.getElementById('items-list');
+  list.innerHTML = '<div class="loader"><i class="ti ti-loader-2"></i>Cargando...</div>';
+  const { data } = await db.from('items').select('*').eq('vendedor_id', vSession.id).order('created_at', { ascending: false });
+  if (!data || !data.length) {
+    list.innerHTML = '<div class="empty">No tienes ítems publicados aún.<br>Ve a "Subir ítem" para agregar uno.</div>';
+    return;
+  }
+  list.innerHTML = data.map(i => `
+    <div class="icard-item">
+      ${i.foto_url ? `<img src="${i.foto_url}" style="width:48px;height:48px;object-fit:cover;border-radius:10px;flex-shrink:0;border:1px solid var(--border)" alt="">` : `<div class="iemoji">${i.emoji}</div>`}
+      <div class="iinfo">
+        <div class="iname">${escHtml(i.nombre)}</div>
+        <div class="imeta">${getRarezaLabel(i.rareza)} · Publicado ${timeAgo(i.created_at)}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+          <span class="spill ${i.activo ? 'sp-act' : 'sp-rev'}">${i.activo ? 'Activo' : 'En revisión'}</span>
+          ${i.stock != null ? `<span class="stock-pill ${i.stock === 0 ? 'out' : i.stock <= 3 ? 'low' : ''}">${i.stock === 0 ? 'Sin stock' : 'Stock: ' + i.stock}</span>` : ''}
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="iprice">S/${i.precio}</div>
+        <button style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:18px;margin-top:6px;display:block;margin-left:auto;opacity:.7" onclick="eliminarItem('${i.id}',this)"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`).join('');
+}
+
+async function eliminarItem(id, btn) {
+  if (!confirm('¿Eliminar este ítem?')) return;
+  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i>';
+  await db.from('items').delete().eq('id', id);
+  showToast('Ítem eliminado', 'ok');
+  loadItems();
+}
+
+// ===== SUBIR ITEM =====
+function selRar(el, code) {
+  document.querySelectorAll('.ropt').forEach(o => o.className = 'ropt');
+  el.classList.add('sel-' + code);
+  selRarVal = code;
+  document.getElementById('err-srar').classList.remove('show');
+}
+
+function previewFoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024) {
+    document.getElementById('err-sfoto').classList.add('show');
+    input.value = '';
+    return;
+  }
+  document.getElementById('err-sfoto').classList.remove('show');
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('foto-preview');
+    prev.src = e.target.result;
+    prev.style.display = 'block';
+    document.getElementById('foto-drop').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function uploadFoto(file) {
+  const ext = file.name.split('.').pop();
+  const path = `items/${vSession.id}_${Date.now()}.${ext}`;
+  const { error } = await db.storage.from('item-photos').upload(path, file, { contentType: file.type, upsert: false });
+  if (error) throw error;
+  const { data } = db.storage.from('item-photos').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+async function subirItem() {
+  if (!vSession) { showToast('Inicia sesión primero', 'bad'); return; }
+  let ok = true;
+  const nombre = document.getElementById('s-nombre').value.trim();
+  const emoji = document.getElementById('s-emoji').value.trim() || '🎮';
+  const precio = parseFloat(document.getElementById('s-precio').value);
+  const desc = document.getElementById('s-desc').value.trim();
+  const stock = parseInt(document.getElementById('s-stock').value);
+  const fotoFile = document.getElementById('s-foto').files[0];
+  
+  if (!nombre) { document.getElementById('s-nombre').classList.add('err'); document.getElementById('err-snombre').classList.add('show'); ok = false; }
+  else { document.getElementById('s-nombre').classList.remove('err'); document.getElementById('err-snombre').classList.remove('show'); }
+  if (!selRarVal) { document.getElementById('err-srar').classList.add('show'); ok = false; }
+  if (!precio || precio <= 0) { document.getElementById('s-precio').classList.add('err'); document.getElementById('err-sprecio').classList.add('show'); ok = false; }
+  else { document.getElementById('s-precio').classList.remove('err'); document.getElementById('err-sprecio').classList.remove('show'); }
+  if (!stock || stock < 1) { document.getElementById('s-stock').classList.add('err'); document.getElementById('err-sstock').classList.add('show'); ok = false; }
+  else { document.getElementById('s-stock').classList.remove('err'); document.getElementById('err-sstock').classList.remove('show'); }
+  if (fotoFile && fotoFile.size > 3 * 1024 * 1024) { document.getElementById('err-sfoto').classList.add('show'); ok = false; }
+  if (!ok) return;
+  
+  const btn = document.getElementById('btn-subir');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite;font-size:17px"></i>Publicando...';
+  let foto_url = '';
+  try {
+    if (fotoFile) foto_url = await uploadFoto(fotoFile);
+  } catch (e) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-upload" style="font-size:17px"></i>Publicar ítem';
+    showToast('Error al subir la foto: ' + e.message, 'bad');
+    return;
+  }
+  
+  const { error } = await db.from('items').insert({
+    vendedor_id: vSession.id,
+    vendedor_roblox: vSession.roblox_user,
+    vendedor_yape: vSession.yape,
+    nombre, emoji, rareza: selRarVal, precio, descripcion: desc,
+    stock, foto_url,
+    activo: false
+  });
+  
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-upload" style="font-size:17px"></i>Publicar ítem';
+  if (error) { showToast('Error: ' + error.message, 'bad'); return; }
+  
+  document.getElementById('s-nombre').value = '';
+  document.getElementById('s-emoji').value = '';
+  document.getElementById('s-precio').value = '';
+  document.getElementById('s-desc').value = '';
+  document.getElementById('s-stock').value = '';
+  document.getElementById('s-foto').value = '';
+  document.getElementById('foto-preview').style.display = 'none';
+  document.getElementById('foto-drop').style.display = 'block';
+  document.querySelectorAll('.ropt').forEach(o => o.className = 'ropt');
+  selRarVal = '';
+  showToast('¡Ítem enviado a revisión! Se publicará en máx. 24h.', 'ok');
+  goTab('items');
+}
+
+// ===== PEDIDOS =====
+async function loadPedidos() {
+  if (!vSession) return;
+  const list = document.getElementById('pedidos-list');
+  list.innerHTML = '<div class="loader"><i class="ti ti-loader-2"></i>Cargando...</div>';
+  const { data } = await db.from('pedidos').select('*').eq('vendedor_id', vSession.id).in('estado', ['pendiente', 'verificado', 'entregado_vendedor']).order('created_at', { ascending: false });
+  if (!data || !data.length) { list.innerHTML = '<div class="empty">No tienes pedidos activos</div>'; return; }
+  
+  list.innerHTML = data.map(p => `
+    <div class="pcard" id="pc-${p.id}">
+      <div class="phead">
+        <div class="pname">${p.item_emoji} ${escHtml(p.item_nombre)}</div>
+        <span class="badge ${p.estado === 'pendiente' ? 'st-new' : p.estado === 'verificado' ? 'st-ver' : 'st-don'}">${p.estado === 'pendiente' ? 'Pago pendiente' : p.estado === 'verificado' ? 'Pago verificado' : 'Esperando confirmación'}</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">S/${p.precio} · Comprador: @${p.comprador_roblox} · ${timeAgo(p.created_at)}</div>
+      ${p.estado === 'verificado' ? '<div class="tbox"><i class="ti ti-clock"></i>Tienes 2 horas para entregar este ítem en Roblox</div>' : ''}
+      ${p.estado === 'entregado_vendedor' ? '<div class="tbox" style="background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.25)"><i class="ti ti-clock" style="color:#4ade80"></i><span style="color:#4ade80">Entrega marcada. Esperando que el comprador confirme la recepción.</span></div>' : ''}
+      ${p.captura_url ? `<img class="cap-img" src="${p.captura_url}" alt="comprobante Yape" onclick="verImagen('${p.id}')">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;text-align:center">Comprobante Yape — haz clic para ampliar</div>` : '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">Sin comprobante adjunto</div>'}
+      ${p.estado === 'pendiente' ? `
+        <div style="background:rgba(255,209,102,.08);border:1px solid rgba(255,209,102,.25);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <i class="ti ti-clock" style="font-size:18px;color:#FFD166;flex-shrink:0"></i>
+          <div style="font-size:12px;color:var(--muted);line-height:1.5">
+            <span style="color:#FFD166;font-weight:800;display:block">Esperando verificación del admin</span>
+            El administrador está revisando el comprobante de pago. Te notificaremos cuando sea aprobado.
+          </div>
+        </div>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${p.estado === 'verificado' ? `<button class="ebtn" style="flex:1" onclick="marcarEntregado('${p.id}')"><i class="ti ti-check"></i>Marcar como entregado en Roblox</button>` : ''}
+      </div>
+      <div class="chat">
+        <div class="clbl">Chat con comprador</div>
+        <div class="cmsgs" id="msgs-${p.id}"><div style="color:var(--muted);font-size:12px;text-align:center;padding:10px">Cargando...</div></div>
+        <div class="crow">
+          <input type="text" id="ci-${p.id}" placeholder="Escribe un mensaje...">
+          <button class="csend" onclick="sendMsg('${p.id}')">Enviar</button>
+        </div>
+      </div>
+    </div>`).join('');
+  
+  data.forEach(p => loadMsgs(p.id));
+  window._capturas = {};
+  data.forEach(p => { if (p.captura_url) window._capturas[p.id] = p.captura_url; });
+}
+
+async function marcarEntregado(id) {
+  await db.from('pedidos').update({ estado: 'entregado_vendedor' }).eq('id', id);
+  showToast('✅ Entrega marcada. Esperando confirmación del comprador.', 'ok');
+  loadPedidos();
+  loadDashStats();
+}
+
+function verImagen(pedidoId) {
+  const url = (window._capturas || {})[pedidoId];
+  if (!url) return;
+  document.getElementById('imgmodal-src').src = url;
+  document.getElementById('imgmodal').classList.add('open');
+}
+
+// ===== CHAT =====
+async function loadMsgs(pedidoId) {
+  const { data } = await db.from('mensajes').select('*').eq('pedido_id', pedidoId).order('created_at');
+  const box = document.getElementById('msgs-' + pedidoId);
+  if (!box) return;
+  if (!data || !data.length) { box.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:10px">Sin mensajes aún</div>'; return; }
+  box.innerHTML = data.map(m => `<div class="cmsg ${m.autor === vSession.roblox_user ? 'me' : 'them'}"><div class="bbl">${escHtml(m.texto)}</div><div class="ts">${timeAgo(m.created_at)}</div></div>`).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+async function sendMsg(pedidoId) {
+  if (!vSession) return;
+  const inp = document.getElementById('ci-' + pedidoId);
+  if (!inp || !inp.value.trim()) return;
+  const txt = inp.value.trim();
+  inp.value = '';
+  await db.from('mensajes').insert({ pedido_id: pedidoId, autor: vSession.roblox_user, texto: txt });
+  loadMsgs(pedidoId);
+}
+
+// ===== OFERTAS =====
+async function loadOfertas() {
+  if (!vSession) return;
+  const list = document.getElementById('ofertas-list');
+  list.innerHTML = '<div class="loader"><i class="ti ti-loader-2"></i>Cargando...</div>';
+  const { data } = await db.from('ofertas').select('*').eq('vendedor_id', vSession.id).eq('estado', 'pendiente').order('created_at', { ascending: false });
+  if (!data || !data.length) { list.innerHTML = '<div class="empty">No tienes ofertas pendientes</div>'; return; }
+  list.innerHTML = data.map(o => `
+    <div class="ocard" id="oc-${o.id}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px">
+        <div style="font-weight:800;font-size:15px">${o.item_emoji} ${escHtml(o.item_nombre)}</div>
+        <div style="font-family:'Bangers',cursive;font-size:20px;color:var(--brand2)">S/${o.precio_oferta}</div>
+      </div>
+      <div style="font-size:12px;color:var(--muted)">Precio original: S/${o.precio_original} · Descuento: ${Math.round((1 - o.precio_oferta / o.precio_original) * 100)}%</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px">Comprador: @${o.comprador_roblox} · ${timeAgo(o.created_at)}</div>
+      <div class="oacts">
+        <button class="btn-acc" onclick="responderOferta('${o.id}','aceptada',this)">✓ Aceptar oferta</button>
+        <button class="btn-rej" onclick="responderOferta('${o.id}','rechazada',this)">✕ Rechazar</button>
+      </div>
+    </div>`).join('');
+}
+
+async function responderOferta(id, estado, btn) {
+  btn.disabled = true;
+  await db.from('ofertas').update({ estado }).eq('id', id);
+  const card = document.getElementById('oc-' + id);
+  if (card) { card.style.opacity = '.4'; card.style.pointerEvents = 'none'; }
+  showToast(estado === 'aceptada' ? 'Oferta aceptada. El comprador será notificado.' : 'Oferta rechazada.', 'ok');
+  loadOfertas();
+  loadDashStats();
+}
+
+// ===== PERFIL =====
+async function guardarPerfil() {
+  if (!vSession) return;
+  const roblox = document.getElementById('p-roblox').value.trim();
+  const nombre = document.getElementById('p-nombre').value.trim();
+  const yape = document.getElementById('p-yape').value.trim();
+  if (!roblox || !nombre) { showToast('Completa todos los campos', 'bad'); return; }
+  if (!isValidYape(yape)) { showToast('Número Yape inválido (debe tener 9 dígitos y comenzar con 9)', 'bad'); return; }
+  const { error } = await db.from('vendedores').update({ roblox_user: roblox, nombre, yape }).eq('id', vSession.id);
+  if (error) { showToast('Error al guardar', 'bad'); return; }
+  vSession.roblox_user = roblox;
+  vSession.nombre = nombre;
+  vSession.yape = yape;
+  localStorage.setItem('brainrot_session', JSON.stringify(vSession));
+  updateUI();
+  showToast('Perfil actualizado', 'ok');
+}
+
+// ===== RESTAURAR SESIÓN =====
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('brainrot_session');
+  if (saved) {
+    try {
+      vSession = JSON.parse(saved);
+      updateUI();
+      goTo('s-dash');
+      loadDashStats();
+      loadPedidos();
+      loadOfertas();
+    } catch (e) { localStorage.removeItem('brainrot_session'); }
+  }
+});
+
+// ===== REALTIME =====
+db.channel('dash-realtime')
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pedidos' }, p => {
+    if (p.new.vendedor_id === vSession?.id) { showToast('🛒 Nuevo pedido recibido!', 'ok'); loadPedidos(); loadDashStats(); }
+  })
+  .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pedidos' }, p => {
+    if (p.new.vendedor_id === vSession?.id) {
+      if (p.new.estado === 'verificado') {
+        showToast('✅ ¡Pago verificado por el admin! Entrega el ítem en Roblox.', 'ok');
+        loadPedidos();
+        loadDashStats();
+      }
+      if (p.new.estado === 'entregado') {
+        showToast('🎉 ¡El comprador confirmó que recibió el ítem! Venta completada.', 'ok');
+        loadPedidos();
+        loadDashStats();
+      }
+    }
+  })
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ofertas' }, o => {
+    if (o.new.vendedor_id === vSession?.id) { showToast('💬 Nueva oferta recibida!', 'ok'); loadOfertas(); loadDashStats(); }
+  })
+  .subscribe();
+</script>
+</body>
+</html>
