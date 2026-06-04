@@ -646,14 +646,32 @@ async function subirItem() {
 }
 
 // ===== PEDIDOS =====
-async function loadPedidos() {
-  if (!vSession) return;
-  const list = document.getElementById('pedidos-list');
-  list.innerHTML = '<div class="loader"><i class="ti ti-loader-2"></i>Cargando...</div>';
-  const { data } = await db.from('pedidos').select('*').eq('vendedor_id', vSession.id).in('estado', ['pendiente', 'verificado', 'entregado_vendedor']).order('created_at', { ascending: false });
-  if (!data || !data.length) { list.innerHTML = '<div class="empty">No tienes pedidos activos</div>'; return; }
-  
-  list.innerHTML = data.map(p => `
+function renderPedidoCard(p, completado = false) {
+  if (completado) {
+    return `
+    <div class="pcard" id="pc-${p.id}" style="opacity:.85;border-color:rgba(74,222,128,.2)">
+      <div class="phead">
+        <div class="pname">${p.item_emoji} ${escHtml(p.item_nombre)}</div>
+        <span class="badge" style="background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.3)">✓ Completado</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">S/${p.precio} · Comprador: @${p.comprador_roblox} · ${timeAgo(p.created_at)}</div>
+      <div style="background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.2);border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <i class="ti ti-circle-check" style="font-size:18px;color:#4ade80;flex-shrink:0"></i>
+        <div style="font-size:12px;color:#4ade80;line-height:1.5">
+          <span style="font-weight:800;display:block">Venta completada 🎉</span>
+          El comprador confirmó que recibió el ítem. El pago fue liberado.
+        </div>
+      </div>
+      ${p.captura_url ? `<div style="margin-bottom:8px"><a href="${p.captura_url}" target="_blank" style="font-size:11px;color:var(--brand);text-decoration:none;display:inline-flex;align-items:center;gap:4px"><i class="ti ti-photo" style="font-size:14px"></i>Ver comprobante Yape</a></div>` : ''}
+      <div class="chat" style="margin-top:8px">
+        <div class="clbl" style="cursor:pointer;user-select:none" onclick="toggleChat('chat-${p.id}')"><i class="ti ti-message-circle"></i> Historial de chat <i class="ti ti-chevron-down" id="chev-${p.id}" style="margin-left:auto;font-size:14px"></i></div>
+        <div id="chat-${p.id}" style="display:none">
+          <div class="cmsgs" id="msgs-${p.id}"><div style="color:var(--muted);font-size:12px;text-align:center;padding:10px">Cargando...</div></div>
+        </div>
+      </div>
+    </div>`;
+  }
+  return `
     <div class="pcard" id="pc-${p.id}">
       <div class="phead">
         <div class="pname">${p.item_emoji} ${escHtml(p.item_nombre)}</div>
@@ -683,11 +701,49 @@ async function loadPedidos() {
           <button class="csend" onclick="sendMsg('${p.id}')">Enviar</button>
         </div>
       </div>
-    </div>`).join('');
-  
-  data.forEach(p => loadMsgs(p.id));
+    </div>`;
+}
+
+function toggleChat(id) {
+  const el = document.getElementById(id);
+  const pedidoId = id.replace('chat-', '');
+  const chev = document.getElementById('chev-' + pedidoId);
+  if (!el) return;
+  const isHidden = el.style.display === 'none';
+  el.style.display = isHidden ? 'block' : 'none';
+  if (chev) chev.style.transform = isHidden ? 'rotate(180deg)' : '';
+  if (isHidden) loadMsgs(pedidoId);
+}
+
+async function loadPedidos() {
+  if (!vSession) return;
+  const list = document.getElementById('pedidos-list');
+  list.innerHTML = '<div class="loader"><i class="ti ti-loader-2"></i>Cargando...</div>';
+
+  const [{ data: activos }, { data: completados }] = await Promise.all([
+    db.from('pedidos').select('*').eq('vendedor_id', vSession.id).in('estado', ['pendiente', 'verificado', 'entregado_vendedor']).order('created_at', { ascending: false }),
+    db.from('pedidos').select('*').eq('vendedor_id', vSession.id).eq('estado', 'entregado').order('created_at', { ascending: false }).limit(20)
+  ]);
+
+  let html = '';
+
+  if (!activos || !activos.length) {
+    html += '<div class="empty" style="padding:32px">No tienes pedidos activos</div>';
+  } else {
+    html += activos.map(p => renderPedidoCard(p, false)).join('');
+  }
+
+  if (completados && completados.length) {
+    html += `<div class="stitle" style="margin-top:28px;margin-bottom:14px;display:flex;align-items:center;gap:8px"><i class="ti ti-circle-check" style="color:#4ade80"></i>Pedidos completados <span style="font-family:'Nunito',sans-serif;font-size:12px;color:var(--muted);font-weight:600">(${completados.length})</span></div>`;
+    html += completados.map(p => renderPedidoCard(p, true)).join('');
+  }
+
+  list.innerHTML = html;
+
   window._capturas = {};
-  data.forEach(p => { if (p.captura_url) window._capturas[p.id] = p.captura_url; });
+  const todos = [...(activos || []), ...(completados || [])];
+  todos.forEach(p => { if (p.captura_url) window._capturas[p.id] = p.captura_url; });
+  (activos || []).forEach(p => loadMsgs(p.id));
 }
 
 async function marcarEntregado(id) {
