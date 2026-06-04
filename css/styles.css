@@ -393,6 +393,89 @@ body {
 }
 .ferr.show { display: block; }
 
+
+/* ── HOME COMPRADOR: hero split layout ── */
+.hero-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: center;
+  text-align: left;
+  padding: 32px 0;
+}
+.hero-split h1 {
+  font-family: 'Bangers', cursive;
+  font-size: clamp(40px, 6vw, 72px);
+  letter-spacing: 3px;
+  line-height: 1;
+  margin-bottom: 14px;
+  color: var(--brand2);
+}
+.hero-split h1 span { color: var(--brand); }
+.hero-split p {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 22px;
+  max-width: 380px;
+}
+.hbtns {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Grid de imágenes decorativas */
+.visual { position: relative; }
+.egrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.ecell {
+  aspect-ratio: 1;
+  background: var(--card2);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ecell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.escrow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(74,222,128,0.07);
+  border: 1px solid rgba(74,222,128,0.2);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.escrow i {
+  font-size: 18px;
+  color: var(--success);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.escrow p { margin: 0; }
+
+@media (max-width: 700px) {
+  .hero-split { grid-template-columns: 1fr; }
+  .visual { display: none; }
+}
+
 /* Cards */
 .icard {
   background: var(--card);
