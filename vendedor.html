@@ -510,19 +510,43 @@ async function eliminarItem(id, btn) {
   btn.disabled = true;
   btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i>';
 
-  // Desactivar primero para sacarlo del catálogo público
-  await db.from('items').update({ activo: false }).eq('id', id).eq('vendedor_id', vSession.id);
-  // Luego intentar borrar
-  const { error } = await db.from('items').delete().eq('id', id).eq('vendedor_id', vSession.id);
+  // Desactivar para sacarlo del catálogo público
+  const { error: errUpd } = await db.from('items').update({ activo: false }).eq('id', id).eq('vendedor_id', vSession.id);
+  if (errUpd) {
+    showToast('Error al eliminar el ítem', 'bad');
+    btn.disabled = false;
+    btn.innerHTML = orig;
+    return;
+  }
 
-  if (error) {
-    showToast('Ítem desactivado del catálogo (no se pudo eliminar del todo)', 'ok');
+  // Intentar borrar de la BD
+  const { error: errDel } = await db.from('items').delete().eq('id', id).eq('vendedor_id', vSession.id);
+
+  if (errDel) {
+    // No se pudo borrar (ej: hay pedidos asociados), pero ya está desactivado del catálogo
+    // Igual lo removemos de la lista visual
+    showToast('Ítem retirado del catálogo correctamente', 'ok');
   } else {
     showToast('Ítem eliminado correctamente', 'ok');
   }
-  btn.disabled = false;
-  btn.innerHTML = orig;
-  loadItems();
+
+  // Remover la card del DOM inmediatamente sin esperar reload
+  const card = btn.closest('.icard-item');
+  if (card) {
+    card.style.transition = 'opacity .3s, transform .3s';
+    card.style.opacity = '0';
+    card.style.transform = 'translateX(20px)';
+    setTimeout(() => {
+      card.remove();
+      // Si no quedan más ítems, mostrar mensaje vacío
+      const list = document.getElementById('items-list');
+      if (list && !list.querySelector('.icard-item')) {
+        list.innerHTML = '<div class="empty">No tienes ítems publicados aún.<br>Ve a "Subir ítem" para agregar uno.</div>';
+      }
+    }, 300);
+  }
+
+  loadDashStats();
 }
 
 // ===== SUBIR ITEM =====
