@@ -532,6 +532,20 @@ async function confirmPurchase(){
   btn.disabled = true;
   btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite;font-size:17px"></i>Enviando...';
 
+  // Verificar que el ítem sigue activo (no fue comprado/reservado mientras tanto)
+  const { data: itemCheck } = await db.from('items').select('activo,stock').eq('id', curItem.id).single();
+  if (!itemCheck || !itemCheck.activo || itemCheck.stock < 1) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-send" style="font-size:17px"></i>Ya yapé — enviar pedido';
+    closeModal();
+    showToast('Este ítem ya no está disponible. Alguien se adelantó.', 'bad');
+    loadItems();
+    return;
+  }
+
+  // Desactivar el ítem para que nadie más lo compre mientras se procesa
+  await db.from('items').update({ activo: false }).eq('id', curItem.id);
+
   const { error } = await db.from('pedidos').insert({
     item_id:          curItem.id,
     item_nombre:      curItem.nombre,
@@ -541,14 +555,19 @@ async function confirmPurchase(){
     vendedor_roblox:  curItem.vendedor_roblox,
     precio:           curItem.precio,
     estado:           'pendiente',
-    captura_url:      uploadedURL,   // ← URL de Storage, no base64
+    captura_url:      uploadedURL,
     yape_numero:      curItem.vendedor_yape
   });
 
   btn.disabled = false;
   btn.innerHTML = '<i class="ti ti-send" style="font-size:17px"></i>Ya yapé — enviar pedido';
 
-  if(error){ showToast('Error al enviar pedido: '+error.message,'bad'); return; }
+  if(error){
+    // Reactivar el ítem si falló el pedido
+    await db.from('items').update({ activo: true }).eq('id', curItem.id);
+    showToast('Error al enviar pedido: '+error.message,'bad');
+    return;
+  }
 
   closeModal();
   showToast('¡Pedido enviado! Te avisaremos cuando se verifique.','ok');
