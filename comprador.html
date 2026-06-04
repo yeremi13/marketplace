@@ -315,8 +315,8 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('#uchip-top,#uchip-sb').forEach(el=>el.textContent='@'+gUser);
     // Volver a la pantalla donde estaba (catalog o pedidos)
     const target = (savedScreen === 's-pedidos') ? 's-pedidos' : 's-catalog';
-    loadItems();
     goTo(target);
+    loadItems();
   }
   // Si no hay sesión, queda en s-home (default)
 });
@@ -910,6 +910,16 @@ function closeLightbox(){
   document.body.style.overflow = '';
 }
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox(); });
+// ── REALTIME CATÁLOGO: actualiza cuando se publican/desactivan ítems ──
+db.channel('catalog-rt')
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'items' }, () => {
+    if(gUser) loadItems();
+  })
+  .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'items' }, () => {
+    if(gUser) loadItems();
+  })
+  .subscribe();
+
 </script>
 </body>
 </html>
