@@ -31,17 +31,19 @@
       <button class="btn-s" style="padding:8px 18px;font-size:15px" onclick="irAComprar()">Comprar ahora</button>
     </div>
     <div class="content">
-      <div class="hero hero-split">
-        <div>
-          <h1>BRAINROT<br><span>MARKET</span></h1>
-          <p>Compra y vende ítems de Steal a Brainrot de forma segura con sistema escrow. Sin cuentas, sin complicaciones.</p>
-          <div class="hbtns">
+      <div class="hero" style="flex-direction:row;text-align:left;align-items:center;justify-content:space-between;gap:32px;padding:40px 0;min-height:unset">
+        <!-- Texto izquierda -->
+        <div style="flex:1;min-width:0">
+          <h1 style="font-family:'Bangers',cursive;font-size:clamp(40px,6vw,72px);letter-spacing:3px;line-height:1;margin-bottom:14px;color:var(--brand2)">BRAINROT<br><span style="color:var(--brand)">MARKET</span></h1>
+          <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:22px;max-width:380px">Compra y vende ítems de Steal a Brainrot de forma segura con sistema escrow. Sin cuentas, sin complicaciones.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
             <button class="btn-p" onclick="irAComprar()"><i class="ti ti-shopping-cart"></i>Comprar como invitado</button>
             <button class="btn-s" onclick="window.location.href='vendedor.html'"><i class="ti ti-store"></i>Soy vendedor</button>
           </div>
         </div>
-        <div class="visual">
-          <div class="egrid">
+        <!-- Grid de imágenes derecha -->
+        <div style="flex:1;min-width:0;max-width:480px">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;border-radius:16px;overflow:hidden">
             <div class="ecell"><img src="img/bicicleta.jpeg" alt="ítem"></div>
             <div class="ecell"><img src="img/strawberry.png" alt="ítem"></div>
             <div class="ecell"><img src="img/casaboo.png" alt="ítem"></div>
@@ -51,7 +53,10 @@
             <div class="ecell"><img src="img/tuntun.jpeg" alt="ítem"></div>
             <div class="ecell"><img src="img/dragon.png" alt="ítem"></div>
           </div>
-          <div class="escrow"><i class="ti ti-shield-check"></i><p><strong>Sistema escrow seguro:</strong> tu dinero queda retenido hasta confirmar la entrega. 0% riesgo de estafa.</p></div>
+          <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.2);border-radius:10px;padding:12px 14px;margin-top:10px;font-size:12px;color:var(--muted);line-height:1.6">
+            <i class="ti ti-shield-check" style="font-size:18px;color:var(--success);flex-shrink:0;margin-top:1px"></i>
+            <p style="margin:0"><strong>Sistema escrow seguro:</strong> tu dinero queda retenido hasta confirmar la entrega. 0% riesgo de estafa.</p>
+          </div>
         </div>
       </div>
       <div class="sgrid">
