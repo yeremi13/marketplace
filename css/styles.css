@@ -1954,3 +1954,27 @@ footer strong {
     grid-template-columns: 1fr;
   }
 }
+/* ── OG RAREZA ── */
+.rar-OG {
+  background: rgba(255, 215, 0, .2);
+  color: #FFD700;
+  border: 1px solid rgba(255, 215, 0, .5);
+  font-weight: 900;
+}
+
+.sel-OG {
+  background: rgba(255, 215, 0, .2) !important;
+  color: #FFD700 !important;
+  border-color: #FFD700 !important;
+}
+
+/* ── RARSEL GRID (OG ocupa ancho completo) ── */
+.rarsel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.rarsel .ropt:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
