@@ -210,7 +210,7 @@ async function loadAll() {
 // ===== STATS =====
 async function loadStats() {
   const [{ count: rev }, { count: act }, { count: ped }, { count: vend }] = await Promise.all([
-    db.from('items').select('*', { count: 'exact', head: true }).eq('activo', false),
+    db.from('items').select('*', { count: 'exact', head: true }).eq('activo', false).not('rechazado', 'eq', true),
     db.from('items').select('*', { count: 'exact', head: true }).eq('activo', true),
     db.from('pedidos').select('*', { count: 'exact', head: true }).in('estado', ['pendiente', 'verificado']),
     db.from('vendedores').select('*', { count: 'exact', head: true })
