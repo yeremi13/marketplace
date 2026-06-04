@@ -708,6 +708,10 @@ function renderPedidoCard(p, completado = false) {
         <div class="clbl">Chat con comprador</div>
         <div class="cmsgs" id="msgs-${p.id}"><div style="color:var(--muted);font-size:12px;text-align:center;padding:10px">Cargando...</div></div>
         <div class="crow">
+          <label class="cattach" title="Adjuntar imagen">
+            <i class="ti ti-photo" style="font-size:16px"></i>
+            <input type="file" accept="image/*" onchange="sendImgMsgV('${p.id}',this)">
+          </label>
           <input type="text" id="ci-${p.id}" placeholder="Escribe un mensaje...">
           <button class="csend" onclick="sendMsg('${p.id}')">Enviar</button>
         </div>
@@ -803,7 +807,16 @@ async function loadMsgs(pedidoId) {
   const box = document.getElementById('msgs-' + pedidoId);
   if (!box) return;
   if (!data || !data.length) { box.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:10px">Sin mensajes aún</div>'; return; }
-  box.innerHTML = data.map(m => `<div class="cmsg ${m.autor === vSession.roblox_user ? 'me' : 'them'}"><div class="bbl">${escHtml(m.texto)}</div><div class="ts">${timeAgo(m.created_at)}</div></div>`).join('');
+  box.innerHTML = data.map(m => {
+    const isMe = m.autor === vSession.roblox_user;
+    let bbl;
+    if (m.tipo === 'imagen' && m.imagen_url) {
+      bbl = `<img src="${m.imagen_url}" class="chat-img" alt="imagen" onclick="verImagenChat('${m.imagen_url}')">`;
+    } else {
+      bbl = escHtml(m.texto || '');
+    }
+    return `<div class="cmsg ${isMe ? 'me' : 'them'}"><div class="bbl">${bbl}</div><div class="ts">${timeAgo(m.created_at)}</div></div>`;
+  }).join('');
   box.scrollTop = box.scrollHeight;
 }
 
@@ -815,6 +828,34 @@ async function sendMsg(pedidoId) {
   inp.value = '';
   await db.from('mensajes').insert({ pedido_id: pedidoId, autor: vSession.roblox_user, texto: txt });
   loadMsgs(pedidoId);
+}
+
+async function sendImgMsgV(pedidoId, input) {
+  if (!vSession) return;
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('Solo se aceptan imágenes', 'bad'); return; }
+  if (file.size > 5 * 1024 * 1024) { showToast('Imagen muy grande (máx 5MB)', 'bad'); return; }
+
+  showToast('Subiendo imagen...', 'ok');
+  const ext  = file.name.split('.').pop();
+  const path = `chat_${pedidoId}_${vSession.roblox_user}_${Date.now()}.${ext}`;
+
+  const { data, error } = await db.storage.from('comprobantes').upload(path, file, { cacheControl: '3600', upsert: false });
+  if (error) { showToast('Error al subir imagen: ' + error.message, 'bad'); return; }
+
+  const { data: urlData } = db.storage.from('comprobantes').getPublicUrl(data.path);
+  const imgUrl = urlData.publicUrl;
+
+  await db.from('mensajes').insert({ pedido_id: pedidoId, autor: vSession.roblox_user, texto: '[imagen]', tipo: 'imagen', imagen_url: imgUrl });
+  showToast('Imagen enviada', 'ok');
+  loadMsgs(pedidoId);
+}
+
+function verImagenChat(url) {
+  document.getElementById('imgmodal-src').src = url;
+  document.getElementById('imgmodal').classList.add('open');
 }
 
 // ===== OFERTAS =====
