@@ -769,7 +769,22 @@ async function loadPedidos() {
 }
 
 async function marcarEntregado(id) {
+  // Cambiar estado del pedido a entregado_vendedor
   await db.from('pedidos').update({ estado: 'entregado_vendedor' }).eq('id', id);
+
+  // Anticipar: descontar stock ya al marcar entrega (el comprador solo confirma recepción)
+  const { data: pedido } = await db.from('pedidos').select('item_id').eq('id', id).single();
+  if (pedido?.item_id) {
+    const { data: item } = await db.from('items').select('stock').eq('id', pedido.item_id).single();
+    if (item) {
+      const nuevoStock = Math.max(0, (item.stock || 1) - 1);
+      await db.from('items').update({
+        stock: nuevoStock,
+        activo: nuevoStock > 0
+      }).eq('id', pedido.item_id);
+    }
+  }
+
   showToast('✅ Entrega marcada. Esperando confirmación del comprador.', 'ok');
   loadPedidos();
   loadDashStats();
