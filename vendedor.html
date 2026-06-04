@@ -649,25 +649,36 @@ async function subirItem() {
 function renderPedidoCard(p, completado = false) {
   if (completado) {
     return `
-    <div class="pcard" id="pc-${p.id}" style="opacity:.85;border-color:rgba(74,222,128,.2)">
-      <div class="phead">
-        <div class="pname">${p.item_emoji} ${escHtml(p.item_nombre)}</div>
-        <span class="badge" style="background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.3)">✓ Completado</span>
+    <div id="pc-${p.id}" style="
+      background:var(--card);
+      border:1px solid rgba(74,222,128,.25);
+      border-left:4px solid #4ade80;
+      border-radius:14px;
+      padding:16px 18px;
+      margin-bottom:12px;
+      display:flex;
+      align-items:center;
+      gap:14px;
+      flex-wrap:wrap;
+    ">
+      <div style="font-size:28px;flex-shrink:0">${p.item_emoji}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:800;font-size:14px;margin-bottom:2px">${escHtml(p.item_nombre)}</div>
+        <div style="font-size:11px;color:var(--muted)">@${p.comprador_roblox} · ${timeAgo(p.created_at)}</div>
       </div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">S/${p.precio} · Comprador: @${p.comprador_roblox} · ${timeAgo(p.created_at)}</div>
-      <div style="background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.2);border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <i class="ti ti-circle-check" style="font-size:18px;color:#4ade80;flex-shrink:0"></i>
-        <div style="font-size:12px;color:#4ade80;line-height:1.5">
-          <span style="font-weight:800;display:block">Venta completada 🎉</span>
-          El comprador confirmó que recibió el ítem. El pago fue liberado.
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:'Bangers',cursive;font-size:20px;color:#4ade80">S/${p.precio}</div>
+        <span style="font-size:10px;font-weight:800;background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.3);padding:2px 8px;border-radius:20px">✓ Completado</span>
+      </div>
+      <div style="width:100%;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:10px;border-top:1px solid rgba(74,222,128,.12)">
+        <span style="font-size:11px;color:#4ade80"><i class="ti ti-circle-check"></i> El comprador confirmó la recepción · pago liberado</span>
+        <div style="display:flex;gap:10px;align-items:center">
+          ${p.captura_url ? `<a href="${p.captura_url}" target="_blank" style="font-size:11px;color:var(--brand);text-decoration:none;display:inline-flex;align-items:center;gap:4px"><i class="ti ti-photo"></i>Comprobante</a>` : ''}
+          <button onclick="toggleChat('chat-${p.id}')" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px"><i class="ti ti-message-circle"></i>Chat <i class="ti ti-chevron-down" id="chev-${p.id}" style="font-size:11px;transition:transform .2s"></i></button>
         </div>
       </div>
-      ${p.captura_url ? `<div style="margin-bottom:8px"><a href="${p.captura_url}" target="_blank" style="font-size:11px;color:var(--brand);text-decoration:none;display:inline-flex;align-items:center;gap:4px"><i class="ti ti-photo" style="font-size:14px"></i>Ver comprobante Yape</a></div>` : ''}
-      <div class="chat" style="margin-top:8px">
-        <div class="clbl" style="cursor:pointer;user-select:none" onclick="toggleChat('chat-${p.id}')"><i class="ti ti-message-circle"></i> Historial de chat <i class="ti ti-chevron-down" id="chev-${p.id}" style="margin-left:auto;font-size:14px"></i></div>
-        <div id="chat-${p.id}" style="display:none">
-          <div class="cmsgs" id="msgs-${p.id}"><div style="color:var(--muted);font-size:12px;text-align:center;padding:10px">Cargando...</div></div>
-        </div>
+      <div id="chat-${p.id}" style="display:none;width:100%">
+        <div class="cmsgs" id="msgs-${p.id}" style="margin-top:8px;max-height:150px"><div style="color:var(--muted);font-size:12px;text-align:center;padding:10px">Cargando...</div></div>
       </div>
     </div>`;
   }
@@ -722,7 +733,7 @@ async function loadPedidos() {
 
   const [{ data: activos }, { data: completados }] = await Promise.all([
     db.from('pedidos').select('*').eq('vendedor_id', vSession.id).in('estado', ['pendiente', 'verificado', 'entregado_vendedor']).order('created_at', { ascending: false }),
-    db.from('pedidos').select('*').eq('vendedor_id', vSession.id).eq('estado', 'entregado').order('created_at', { ascending: false }).limit(20)
+    db.from('pedidos').select('*').eq('vendedor_id', vSession.id).eq('estado', 'entregado').order('created_at', { ascending: false }).limit(3)
   ]);
 
   let html = '';
@@ -734,7 +745,18 @@ async function loadPedidos() {
   }
 
   if (completados && completados.length) {
-    html += `<div class="stitle" style="margin-top:28px;margin-bottom:14px;display:flex;align-items:center;gap:8px"><i class="ti ti-circle-check" style="color:#4ade80"></i>Pedidos completados <span style="font-family:'Nunito',sans-serif;font-size:12px;color:var(--muted);font-weight:600">(${completados.length})</span></div>`;
+    html += `
+    <div style="margin-top:36px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        <div style="flex:1;height:1px;background:rgba(74,222,128,.2)"></div>
+        <div style="display:flex;align-items:center;gap:7px;font-family:'Bangers',cursive;font-size:17px;color:#4ade80;letter-spacing:1px">
+          <i class="ti ti-circle-check"></i> PEDIDOS COMPLETADOS
+          <span style="font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.25);padding:2px 8px;border-radius:20px">${completados.length}</span>
+        </div>
+        <div style="flex:1;height:1px;background:rgba(74,222,128,.2)"></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);text-align:center">Últimas 3 ventas completadas</div>
+    </div>`;
     html += completados.map(p => renderPedidoCard(p, true)).join('');
   }
 
