@@ -199,17 +199,13 @@
           <div class="ferr" id="err-snombre">El nombre es obligatorio</div>
         </div>
         <div class="field">
-          <label>Emoji del ítem</label>
-          <input id="s-emoji" type="text" placeholder="🎮" maxlength="4">
-          <div class="ferr" id="err-semoji">Pon un emoji</div>
-        </div>
-        <div class="field">
           <label>Rareza</label>
           <div class="rarsel">
             <div class="ropt" onclick="selRar(this,'L')">⭐ Legendary</div>
             <div class="ropt" onclick="selRar(this,'E')">💜 Epic</div>
             <div class="ropt" onclick="selRar(this,'R')">💙 Rare</div>
             <div class="ropt" onclick="selRar(this,'C')">Common</div>
+            <div class="ropt" onclick="selRar(this,'OG')" style="grid-column:1/-1">👑 OG</div>
           </div>
           <div class="ferr" id="err-srar">Selecciona una rareza</div>
         </div>
@@ -228,7 +224,7 @@
           <div class="ferr" id="err-sstock">Ingresa el stock disponible (mínimo 1)</div>
         </div>
         <div class="field">
-          <label>Foto del producto</label>
+          <label>Foto del producto <span style="color:var(--danger)">*obligatorio</span></label>
           <div class="foto-upload" id="foto-drop">
             <input type="file" id="s-foto" accept="image/*" onchange="previewFoto(this)">
             <i class="ti ti-photo"></i>
@@ -236,7 +232,7 @@
             <div class="ft" style="margin-top:4px;font-size:11px">JPG, PNG o WEBP · máx. 3MB</div>
           </div>
           <img id="foto-preview" class="foto-preview" alt="Vista previa">
-          <div class="ferr" id="err-sfoto">La imagen no debe superar 3MB</div>
+          <div class="ferr" id="err-sfoto">La foto del producto es obligatoria</div>
         </div>
         <div class="ibox"><i class="ti ti-info-circle"></i><span>Tu ítem será revisado por el admin antes de publicarse (máx 24h). Comisión del 8% por venta exitosa.</span></div>
         <button class="btn-full" id="btn-subir" onclick="subirItem()"><i class="ti ti-upload" style="font-size:17px"></i>Publicar ítem</button>
@@ -556,7 +552,6 @@ async function subirItem() {
   if (!vSession) { showToast('Inicia sesión primero', 'bad'); return; }
   let ok = true;
   const nombre = document.getElementById('s-nombre').value.trim();
-  const emoji = document.getElementById('s-emoji').value.trim() || '🎮';
   const precio = parseFloat(document.getElementById('s-precio').value);
   const desc = document.getElementById('s-desc').value.trim();
   const stock = parseInt(document.getElementById('s-stock').value);
@@ -569,7 +564,9 @@ async function subirItem() {
   else { document.getElementById('s-precio').classList.remove('err'); document.getElementById('err-sprecio').classList.remove('show'); }
   if (!stock || stock < 1) { document.getElementById('s-stock').classList.add('err'); document.getElementById('err-sstock').classList.add('show'); ok = false; }
   else { document.getElementById('s-stock').classList.remove('err'); document.getElementById('err-sstock').classList.remove('show'); }
-  if (fotoFile && fotoFile.size > 3 * 1024 * 1024) { document.getElementById('err-sfoto').classList.add('show'); ok = false; }
+  if (!fotoFile) { document.getElementById('err-sfoto').classList.add('show'); ok = false; }
+  else if (fotoFile.size > 3 * 1024 * 1024) { document.getElementById('err-sfoto').classList.add('show'); ok = false; }
+  else { document.getElementById('err-sfoto').classList.remove('show'); }
   if (!ok) return;
   
   const btn = document.getElementById('btn-subir');
@@ -577,7 +574,7 @@ async function subirItem() {
   btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite;font-size:17px"></i>Publicando...';
   let foto_url = '';
   try {
-    if (fotoFile) foto_url = await uploadFoto(fotoFile);
+    foto_url = await uploadFoto(fotoFile);
   } catch (e) {
     btn.disabled = false;
     btn.innerHTML = '<i class="ti ti-upload" style="font-size:17px"></i>Publicar ítem';
@@ -589,7 +586,7 @@ async function subirItem() {
     vendedor_id: vSession.id,
     vendedor_roblox: vSession.roblox_user,
     vendedor_yape: vSession.yape,
-    nombre, emoji, rareza: selRarVal, precio, descripcion: desc,
+    nombre, emoji: '🎮', rareza: selRarVal, precio, descripcion: desc,
     stock, foto_url,
     activo: false
   });
@@ -599,7 +596,6 @@ async function subirItem() {
   if (error) { showToast('Error: ' + error.message, 'bad'); return; }
   
   document.getElementById('s-nombre').value = '';
-  document.getElementById('s-emoji').value = '';
   document.getElementById('s-precio').value = '';
   document.getElementById('s-desc').value = '';
   document.getElementById('s-stock').value = '';
