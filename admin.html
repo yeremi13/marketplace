@@ -210,7 +210,7 @@ async function loadAll() {
 // ===== STATS =====
 async function loadStats() {
   const [{ count: rev }, { count: act }, { count: ped }, { count: vend }] = await Promise.all([
-    db.from('items').select('*', { count: 'exact', head: true }).eq('activo', false).not('rechazado', 'eq', true),
+    db.from('items').select('*', { count: 'exact', head: true }).eq('activo', false).not('rechazado', 'eq', true).not('aprobado', 'eq', true),
     db.from('items').select('*', { count: 'exact', head: true }).eq('activo', true),
     db.from('pedidos').select('*', { count: 'exact', head: true }).in('estado', ['pendiente', 'verificado']),
     db.from('vendedores').select('*', { count: 'exact', head: true })
@@ -228,7 +228,12 @@ async function loadStats() {
 async function loadRevision() {
   const list = document.getElementById('revision-list');
   list.innerHTML = '<div class="loader"><i class="ti ti-loader-2"></i>Cargando...</div>';
-  const { data } = await db.from('items').select('*').eq('activo', false).not('rechazado', 'eq', true).order('created_at', { ascending: false });
+  // Solo mostrar ítems que: activo=false, no rechazados, y nunca fueron aprobados antes
+  const { data } = await db.from('items').select('*')
+    .eq('activo', false)
+    .not('rechazado', 'eq', true)
+    .not('aprobado', 'eq', true)
+    .order('created_at', { ascending: false });
   if (!data || !data.length) { list.innerHTML = '<div class="empty">✅ No hay ítems pendientes de revisión</div>'; loadStats(); return; }
   list.innerHTML = data.map(i => `
     <div class="icard-item" id="ic-${i.id}">
@@ -257,7 +262,8 @@ async function loadRevision() {
 async function aprobarItem(id, btn) {
   btn.disabled = true;
   btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i>';
-  const { error } = await db.from('items').update({ activo: true }).eq('id', id);
+  // Marcar como activo Y aprobado para que no vuelva a aparecer en revisión si se desactiva por compra
+  const { error } = await db.from('items').update({ activo: true, aprobado: true }).eq('id', id);
   if (error) { showToast('Error: ' + error.message, 'bad'); btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i>Aprobar'; return; }
   showToast('¡Ítem aprobado y publicado!', 'ok');
   const card = document.getElementById('ic-' + id);
