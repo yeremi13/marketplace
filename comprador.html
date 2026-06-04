@@ -848,6 +848,12 @@ function pedirConfirmacion(pedidoId) {
 function cerrarConfirmModal() {
   _pedidoAConfirmar = null;
   document.getElementById('confirm-modal').classList.remove('open');
+  // Resetear botón siempre al cerrar
+  const btn = document.getElementById('confirm-yes-btn');
+  if(btn){
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-check"></i> Sí, confirmar';
+  }
 }
 
 async function confirmarEntrega() {
@@ -855,7 +861,11 @@ async function confirmarEntrega() {
   const btn = document.getElementById('confirm-yes-btn');
   btn.disabled = true;
   btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> Confirmando...';
-  await confirmDelivery(_pedidoAConfirmar);
+  try {
+    await confirmDelivery(_pedidoAConfirmar);
+  } catch(e) {
+    showToast('Error al confirmar. Intenta de nuevo.', 'bad');
+  }
   cerrarConfirmModal();
 }
 
