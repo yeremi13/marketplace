@@ -604,6 +604,8 @@ async function loadPedidos(){
         <span class="badge ${stMap[p.estado]||'st-pend'}" id="badge-${p.id}">${stLbl[p.estado]||p.estado}</span>
       </div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px">S/${p.precio} · Vendedor: @${p.vendedor_roblox} · ${timeAgo(p.created_at)}</div>
+      ${p.oferta_id ? `<div class="ibox2" style="margin-bottom:10px"><i class="ti ti-tag"></i><span>Pedido creado desde una <strong>oferta aceptada</strong> · precio negociado S/${p.precio}</span></div>` : ''}
+      ${p.estado==='pendiente' && p.yape_numero && !p.captura_url ? `<div class="yapebox" style="margin-bottom:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:6px">⚠️ Debes pagar por Yape y subir el comprobante desde el catálogo</div><div class="ynum">${p.yape_numero}</div><div class="yamount">S/ ${p.precio}</div><div class="yhint">Yape al vendedor · luego ve al catálogo y sube el comprobante</div></div>` : ''}
       ${p.captura_url ? `<div style="margin-bottom:10px"><a href="${p.captura_url}" target="_blank" style="font-size:11px;color:var(--brand);text-decoration:none;display:inline-flex;align-items:center;gap:4px"><i class="ti ti-photo" style="font-size:14px"></i>Ver comprobante</a></div>` : ''}
       ${p.estado==='verificado' ? `<div class="tbox"><i class="ti ti-clock"></i>El vendedor tiene 2 horas para entregarte el ítem en Roblox</div>` : ''}
       ${p.estado==='entregado_vendedor' ? `<div class="tbox" style="background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.25)"><i class="ti ti-check" style="color:#4ade80"></i><span style="color:#4ade80">¡El vendedor marcó la entrega! Confirma que recibiste el ítem.</span></div>` : ''}
