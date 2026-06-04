@@ -423,14 +423,37 @@ window.addEventListener('load', () => {
 
 // ===== REALTIME =====
 db.channel('admin-rt')
-  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'items' }, () => { loadStats(); })
-  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pedidos' }, () => { loadStats(); showToast('🛒 Nuevo pedido recibido', 'ok'); })
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'items' }, () => {
+    loadStats();
+    // Si está en revisión, recargar esa tab
+    const tabRev = document.getElementById('tab-revision');
+    if (tabRev && tabRev.classList.contains('active')) loadRevision();
+  })
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pedidos' }, p => {
+    loadStats();
+    showToast('🛒 Nuevo pedido recibido: @' + p.new.comprador_roblox, 'ok');
+    // Auto-recargar si está en la tab pedidos
+    const tabPed = document.getElementById('tab-pedidos');
+    if (tabPed && tabPed.classList.contains('active')) loadPedidos();
+  })
   .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pedidos' }, p => {
-    if (p.new.estado === 'entregado') {
-      showToast('🎉 ¡Comprador confirmó recepción! Transacción completada: ' + p.new.item_nombre, 'ok');
-      loadStats();
-      if (document.getElementById('tab-pedidos').classList.contains('active')) loadPedidos();
+    // Recargar pedidos en tiempo real para ver comprobantes nuevos y cambios de estado
+    const tabPed = document.getElementById('tab-pedidos');
+    if (tabPed && tabPed.classList.contains('active')) {
+      loadPedidos();
     }
+    if (p.new.estado === 'entregado') {
+      showToast('🎉 Transacción completada: ' + p.new.item_nombre, 'ok');
+      loadStats();
+    }
+    // Si se subió un comprobante nuevo, notificar
+    if (p.new.captura_url && !p.old?.captura_url) {
+      showToast('📸 Nuevo comprobante subido por @' + p.new.comprador_roblox, 'ok');
+      if (tabPed && tabPed.classList.contains('active')) loadPedidos();
+    }
+  })
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ofertas' }, () => {
+    loadStats();
   })
   .subscribe();
 </script>
