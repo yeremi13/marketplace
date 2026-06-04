@@ -841,10 +841,40 @@ async function loadOfertas() {
 
 async function responderOferta(id, estado, btn) {
   btn.disabled = true;
+
+  // 1. Obtener datos completos de la oferta
+  const { data: oferta } = await db.from('ofertas').select('*').eq('id', id).single();
+  if (!oferta) { showToast('Error al obtener la oferta.', 'bad'); btn.disabled = false; return; }
+
+  // 2. Marcar oferta como aceptada/rechazada
   await db.from('ofertas').update({ estado }).eq('id', id);
+
+  if (estado === 'aceptada') {
+    // 3. Crear pedido automáticamente con el precio de la oferta
+    const { error } = await db.from('pedidos').insert({
+      item_id:          oferta.item_id,
+      item_nombre:      oferta.item_nombre,
+      item_emoji:       oferta.item_emoji,
+      comprador_roblox: oferta.comprador_roblox,
+      vendedor_id:      oferta.vendedor_id,
+      vendedor_roblox:  oferta.vendedor_roblox,
+      precio:           oferta.precio_oferta,   // ← precio negociado
+      estado:           'pendiente',
+      yape_numero:      vSession.yape,
+      oferta_id:        oferta.id               // referencia a la oferta
+    });
+
+    if (error) {
+      showToast('Oferta aceptada pero error al crear pedido: ' + error.message, 'bad');
+    } else {
+      showToast('✅ Oferta aceptada. Se creó el pedido automáticamente. El comprador recibirá instrucciones de pago.', 'ok');
+    }
+  } else {
+    showToast('Oferta rechazada.', 'ok');
+  }
+
   const card = document.getElementById('oc-' + id);
   if (card) { card.style.opacity = '.4'; card.style.pointerEvents = 'none'; }
-  showToast(estado === 'aceptada' ? 'Oferta aceptada. El comprador será notificado.' : 'Oferta rechazada.', 'ok');
   loadOfertas();
   loadDashStats();
 }
