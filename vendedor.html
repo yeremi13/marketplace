@@ -850,7 +850,17 @@ async function responderOferta(id, estado, btn) {
   await db.from('ofertas').update({ estado }).eq('id', id);
 
   if (estado === 'aceptada') {
-    // 3. Crear pedido automáticamente con el precio de la oferta
+    // 3. Desactivar el ítem INMEDIATAMENTE para que nadie más lo compre
+    await db.from('items').update({ activo: false }).eq('id', oferta.item_id);
+
+    // 4. Rechazar automáticamente otras ofertas pendientes del mismo ítem
+    await db.from('ofertas')
+      .update({ estado: 'rechazada' })
+      .eq('item_id', oferta.item_id)
+      .eq('estado', 'pendiente')
+      .neq('id', oferta.id);
+
+    // 5. Crear pedido con el precio negociado
     const { error } = await db.from('pedidos').insert({
       item_id:          oferta.item_id,
       item_nombre:      oferta.item_nombre,
@@ -858,16 +868,16 @@ async function responderOferta(id, estado, btn) {
       comprador_roblox: oferta.comprador_roblox,
       vendedor_id:      oferta.vendedor_id,
       vendedor_roblox:  oferta.vendedor_roblox,
-      precio:           oferta.precio_oferta,   // ← precio negociado
+      precio:           oferta.precio_oferta,
       estado:           'pendiente',
       yape_numero:      vSession.yape,
-      oferta_id:        oferta.id               // referencia a la oferta
+      oferta_id:        oferta.id
     });
 
     if (error) {
       showToast('Oferta aceptada pero error al crear pedido: ' + error.message, 'bad');
     } else {
-      showToast('✅ Oferta aceptada. Se creó el pedido automáticamente. El comprador recibirá instrucciones de pago.', 'ok');
+      showToast('✅ Oferta aceptada. El ítem fue reservado para el comprador.', 'ok');
     }
   } else {
     showToast('Oferta rechazada.', 'ok');
