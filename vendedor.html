@@ -769,7 +769,11 @@ async function loadPedidos() {
   window._capturas = {};
   const todos = [...(activos || []), ...(completados || [])];
   todos.forEach(p => { if (p.captura_url) window._capturas[p.id] = p.captura_url; });
-  (activos || []).forEach(p => loadMsgs(p.id));
+  (activos || []).forEach(p => {
+    loadMsgs(p.id);
+    subscribeToMsgsV(p.id);
+    subscribeToPedidoV(p.id);
+  });
 }
 
 async function marcarEntregado(id) {
@@ -827,7 +831,7 @@ async function sendMsg(pedidoId) {
   const txt = inp.value.trim();
   inp.value = '';
   await db.from('mensajes').insert({ pedido_id: pedidoId, autor: vSession.roblox_user, texto: txt });
-  loadMsgs(pedidoId);
+  // El realtime subscription actualiza el DOM automáticamente
 }
 
 async function sendImgMsgV(pedidoId, input) {
@@ -850,7 +854,7 @@ async function sendImgMsgV(pedidoId, input) {
 
   await db.from('mensajes').insert({ pedido_id: pedidoId, autor: vSession.roblox_user, texto: '[imagen]', tipo: 'imagen', imagen_url: imgUrl });
   showToast('Imagen enviada', 'ok');
-  loadMsgs(pedidoId);
+  // El realtime subscription actualiza el DOM automáticamente
 }
 
 function verImagenChat(url) {
@@ -964,26 +968,92 @@ window.addEventListener('load', () => {
 });
 
 // ===== REALTIME =====
+// Mapa de suscripciones activas por pedido (para no duplicar)
+const _rtSubs = {};
+
+// Suscribir realtime de mensajes para un pedido específico
+function subscribeToMsgsV(pedidoId) {
+  if (_rtSubs['msg_' + pedidoId]) return;
+  const sub = db.channel('vmsg-' + pedidoId)
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'mensajes',
+      filter: `pedido_id=eq.${pedidoId}`
+    }, payload => {
+      const box = document.getElementById('msgs-' + pedidoId);
+      if (!box) return;
+      const m = payload.new;
+      const isMe = m.autor === vSession?.roblox_user;
+      const div = document.createElement('div');
+      div.className = 'cmsg ' + (isMe ? 'me' : 'them');
+      let bbl;
+      if (m.tipo === 'imagen' && m.imagen_url) {
+        bbl = `<img src="${m.imagen_url}" class="chat-img" alt="imagen" onclick="verImagenChat('${m.imagen_url}')">`;
+      } else {
+        bbl = escHtml(m.texto || '');
+      }
+      div.innerHTML = `<div class="bbl">${bbl}</div><div class="ts">${isMe ? 'Tú' : '@' + m.autor} · ahora</div>`;
+      // Quitar placeholder si existe
+      const ph = box.querySelector('[style*="text-align:center"]');
+      if (ph) ph.remove();
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+      // Si no soy yo quien envió, mostrar toast
+      if (!isMe) showToast('💬 Nuevo mensaje de @' + m.autor, 'ok');
+    })
+    .subscribe();
+  _rtSubs['msg_' + pedidoId] = sub;
+}
+
+// Suscribir realtime de estado de pedido
+function subscribeToPedidoV(pedidoId) {
+  if (_rtSubs['ped_' + pedidoId]) return;
+  const sub = db.channel('vped-' + pedidoId)
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'pedidos',
+      filter: `id=eq.${pedidoId}`
+    }, payload => {
+      const p = payload.new;
+      if (p.vendedor_id !== vSession?.id) return;
+      if (p.estado === 'entregado') {
+        showToast('🎉 ¡El comprador confirmó que recibió el ítem! Venta completada.', 'ok');
+        loadPedidos(); loadDashStats();
+      }
+      // Actualizar badge de estado en la card sin recargar todo
+      const badge = document.querySelector(`#pc-${pedidoId} .badge`);
+      if (badge && p.estado === 'verificado') {
+        badge.className = 'badge st-ver';
+        badge.textContent = 'Pago verificado';
+      }
+    })
+    .subscribe();
+  _rtSubs['ped_' + pedidoId] = sub;
+}
+
+// Canal global para nuevos pedidos/ofertas
 db.channel('dash-realtime')
   .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pedidos' }, p => {
-    if (p.new.vendedor_id === vSession?.id) { showToast('🛒 Nuevo pedido recibido!', 'ok'); loadPedidos(); loadDashStats(); }
+    if (p.new.vendedor_id === vSession?.id) {
+      showToast('🛒 ¡Nuevo pedido recibido!', 'ok');
+      loadPedidos(); loadDashStats();
+    }
   })
   .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pedidos' }, p => {
     if (p.new.vendedor_id === vSession?.id) {
       if (p.new.estado === 'verificado') {
         showToast('✅ ¡Pago verificado por el admin! Entrega el ítem en Roblox.', 'ok');
-        loadPedidos();
-        loadDashStats();
-      }
-      if (p.new.estado === 'entregado') {
-        showToast('🎉 ¡El comprador confirmó que recibió el ítem! Venta completada.', 'ok');
-        loadPedidos();
-        loadDashStats();
+        loadPedidos(); loadDashStats();
       }
     }
   })
   .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ofertas' }, o => {
-    if (o.new.vendedor_id === vSession?.id) { showToast('💬 Nueva oferta recibida!', 'ok'); loadOfertas(); loadDashStats(); }
+    if (o.new.vendedor_id === vSession?.id) {
+      showToast('💬 ¡Nueva oferta recibida!', 'ok');
+      loadOfertas(); loadDashStats();
+    }
   })
   .subscribe();
 </script>
