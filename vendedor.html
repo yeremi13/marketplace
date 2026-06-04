@@ -506,9 +506,22 @@ async function loadItems() {
 
 async function eliminarItem(id, btn) {
   if (!confirm('¿Eliminar este ítem?')) return;
+  const orig = btn.innerHTML;
+  btn.disabled = true;
   btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i>';
-  await db.from('items').delete().eq('id', id);
-  showToast('Ítem eliminado', 'ok');
+
+  // Desactivar primero para sacarlo del catálogo público
+  await db.from('items').update({ activo: false }).eq('id', id).eq('vendedor_id', vSession.id);
+  // Luego intentar borrar
+  const { error } = await db.from('items').delete().eq('id', id).eq('vendedor_id', vSession.id);
+
+  if (error) {
+    showToast('Ítem desactivado del catálogo (no se pudo eliminar del todo)', 'ok');
+  } else {
+    showToast('Ítem eliminado correctamente', 'ok');
+  }
+  btn.disabled = false;
+  btn.innerHTML = orig;
   loadItems();
 }
 
