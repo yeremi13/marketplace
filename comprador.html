@@ -371,7 +371,7 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:var(--text);fo
     <button class="xbtn" onclick="closeModal()"><i class="ti ti-x"></i></button>
   </div>
   <div class="mrow">
-    <div class="memoji" id="m-emoji">🎮</div>
+    <div class="memoji" id="m-emoji" onclick="openLightbox()" title="Clic para ampliar" style="cursor:zoom-in">🎮</div>
     <div class="minfo">
       <div class="mname" id="m-name">—</div>
       <div class="msub" id="m-rar">—</div>
@@ -428,6 +428,12 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:var(--text);fo
     <button class="btn-full" onclick="sendOffer()">Enviar oferta al vendedor</button>
   </div>
 </div>
+</div>
+
+<!-- ═══ LIGHTBOX ═══ -->
+<div id="lightbox" onclick="closeLightbox()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:1000;align-items:center;justify-content:center;cursor:zoom-out;">
+  <img id="lightbox-img" src="" alt="" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:16px;box-shadow:0 8px 60px rgba(0,0,0,.6);background:#000;">
+  <button onclick="closeLightbox()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;width:42px;height:42px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i class="ti ti-x"></i></button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -909,6 +915,21 @@ function showToast(msg, type='ok'){
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'), 3500);
 }
+
+// ── LIGHTBOX ──
+function openLightbox(){
+  const img = document.querySelector('#m-emoji img');
+  if(!img) return;
+  const lb = document.getElementById('lightbox');
+  document.getElementById('lightbox-img').src = img.src;
+  lb.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox(){
+  document.getElementById('lightbox').style.display = 'none';
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox(); });
 </script>
 </body>
 </html>
