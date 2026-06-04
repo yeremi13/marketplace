@@ -746,7 +746,24 @@ async function confirmarEntrega() {
 }
 
 async function confirmDelivery(pedidoId){
+  // 1. Obtener item_id del pedido
+  const { data: pedido } = await db.from('pedidos').select('item_id').eq('id', pedidoId).single();
+
+  // 2. Marcar pedido como entregado
   await db.from('pedidos').update({estado:'entregado'}).eq('id', pedidoId);
+
+  // 3. Descontar stock y desactivar el ítem si llega a 0
+  if (pedido?.item_id) {
+    const { data: item } = await db.from('items').select('stock').eq('id', pedido.item_id).single();
+    if (item) {
+      const nuevoStock = Math.max(0, (item.stock || 1) - 1);
+      await db.from('items').update({
+        stock: nuevoStock,
+        activo: nuevoStock > 0
+      }).eq('id', pedido.item_id);
+    }
+  }
+
   showToast('Entrega confirmada. El pago fue liberado al vendedor.','ok');
   loadPedidos();
 }
