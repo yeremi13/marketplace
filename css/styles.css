@@ -625,6 +625,7 @@ body {
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
   margin-bottom: 28px;
+  margin-top: 32px;
 }
 
 .sbox {
@@ -2083,4 +2084,52 @@ footer strong {
 @media(max-width:480px){
   .modal{border-radius:20px 20px 0 0;position:fixed;bottom:0;left:0;right:0;max-width:100%;margin:0;max-height:88vh}
   .moverlay{align-items:flex-end;padding:0}
+}
+/* ============================================
+   Hero de 2 columnas (comprador.html)
+   ============================================ */
+.hero-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+  text-align: left;
+  min-height: unset;
+  padding: 48px 28px 36px;
+  justify-content: unset;
+  flex-direction: unset;
+}
+
+.hero-split h1 {
+  font-family: 'Bangers', cursive;
+  font-size: clamp(42px, 5vw, 72px);
+  letter-spacing: 4px;
+  line-height: 0.95;
+  margin-bottom: 14px;
+  color: var(--brand);
+}
+
+.hero-split h1 span { color: var(--brand2); }
+
+.hero-split > div:first-child p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+  margin-bottom: 24px;
+  max-width: 380px;
+}
+
+@media (max-width: 860px) {
+  .hero-split {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 28px;
+    padding: 32px 16px 24px;
+  }
+  .hero-split > div:first-child p {
+    max-width: 100%;
+  }
+  .hero-split .hbtns {
+    justify-content: center;
+  }
 }
