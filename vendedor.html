@@ -481,7 +481,7 @@ async function loadItems() {
   if (!vSession) return;
   const list = document.getElementById('items-list');
   list.innerHTML = '<div class="loader"><i class="ti ti-loader-2"></i>Cargando...</div>';
-  const { data } = await db.from('items').select('*').eq('vendedor_id', vSession.id).order('created_at', { ascending: false });
+  const { data } = await db.from('items').select('*').eq('vendedor_id', vSession.id).neq('activo', false).order('created_at', { ascending: false });
   if (!data || !data.length) {
     list.innerHTML = '<div class="empty">No tienes ítems publicados aún.<br>Ve a "Subir ítem" para agregar uno.</div>';
     return;
