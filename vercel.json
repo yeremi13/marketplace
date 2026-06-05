@@ -2,11 +2,11 @@
   "rewrites": [
     { "source": "/comprar", "destination": "/comprador.html" },
     { "source": "/vender", "destination": "/vendedor.html" },
-    { "source": "/admin", "destination": "/admin.html" }
+    { "source": "/admin-brainrot2025", "destination": "/admin.html" }
   ],
   "headers": [
     {
-      "source": "/admin",
+      "source": "/admin-brainrot2025",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
       ]
