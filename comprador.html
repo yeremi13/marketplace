@@ -172,7 +172,18 @@
       <span class="ttitle">Mis pedidos</span>
     </div>
     <div class="content" style="max-width:700px">
-      <div class="stitle">Mis pedidos</div>
+      <!-- Buscar historial por usuario (visible solo si no hay sesión) -->
+      <div id="historial-buscar" style="display:none;margin-bottom:20px">
+        <div class="fcard" style="margin-bottom:0">
+          <h2 style="font-size:18px;margin-bottom:6px">Buscar mis pedidos</h2>
+          <p class="sub" style="margin-bottom:14px">¿Cambiaste de dispositivo? Ingresa tu usuario de Roblox para ver tu historial.</p>
+          <div class="field" style="margin-bottom:10px">
+            <input id="historial-inp" type="text" placeholder="Tu usuario de Roblox" autocomplete="off">
+          </div>
+          <button class="btn-full" onclick="buscarHistorial()" style="margin-bottom:0"><i class="ti ti-search" style="font-size:16px"></i>Buscar pedidos</button>
+        </div>
+      </div>
+      <div class="stitle" id="pedidos-title">Mis pedidos</div>
       <div id="pedidos-list"><div class="loader"><i class="ti ti-loader-2"></i>Cargando...</div></div>
     </div>
   </div>
@@ -604,9 +615,26 @@ async function sendOffer(){
   showToast('Oferta de S/'+v+' enviada al vendedor.','ok');
 }
 
+// ── BUSCAR HISTORIAL SIN SESIÓN ──
+async function buscarHistorial(){
+  const inp = document.getElementById('historial-inp');
+  const user = inp.value.trim();
+  if(!user){ showToast('Escribe tu usuario de Roblox','bad'); return; }
+  gUser = user;
+  document.querySelectorAll('#uchip-top,#uchip-sb').forEach(el=>el.textContent='@'+user);
+  saveSession('s-pedidos');
+  document.getElementById('historial-buscar').style.display = 'none';
+  document.getElementById('pedidos-title').textContent = 'Pedidos de @' + user;
+  loadPedidos();
+}
+
 // ── PEDIDOS ──
 async function loadPedidos(){
-  if(!gUser) return;
+  if(!gUser){
+    document.getElementById('historial-buscar').style.display = 'block';
+    document.getElementById('pedidos-list').innerHTML = '';
+    return;
+  }
   const list = document.getElementById('pedidos-list');
   list.innerHTML = '<div class="loader"><i class="ti ti-loader-2"></i>Cargando...</div>';
 
@@ -614,15 +642,7 @@ async function loadPedidos(){
     .eq('comprador_roblox', gUser)
     .order('created_at', {ascending:false});
 
-  // Mantener solo los últimos 3 pedidos; eliminar el resto
-  if(data && data.length > 3){
-    const aEliminar = data.slice(3);
-    const idsEliminar = aEliminar.map(p => p.id);
-    await db.from('pedidos').delete().in('id', idsEliminar);
-    await db.from('mensajes').delete().in('pedido_id', idsEliminar);
-  }
-
-  const pedidos = (data || []).slice(0, 3);
+  const pedidos = data || [];
 
   if(error || !pedidos.length){
     list.innerHTML = '<div style="text-align:center;padding:48px;color:var(--muted);font-size:14px">No tienes pedidos aún</div>';
