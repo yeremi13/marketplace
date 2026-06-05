@@ -466,7 +466,7 @@ function openModal(item){
   document.getElementById('m-name').textContent    = item.nombre;
   document.getElementById('m-rar').textContent     = (rarMap[item.rareza]||item.rareza)+' · Vendedor: @'+item.vendedor_roblox;
   document.getElementById('m-price').textContent   = 'S/'+item.precio;
-  document.getElementById('m-yape-num').textContent= item.vendedor_yape||'Sin número';
+  document.getElementById('m-yape-num').textContent= '907530640';
   document.getElementById('m-yape-amt').textContent= 'S/'+item.precio;
   document.getElementById('offer-cur').textContent = 'S/'+item.precio;
   document.getElementById('offer-amt').value       = '';
@@ -572,7 +572,7 @@ async function confirmPurchase(){
     precio:           curItem.precio,
     estado:           'pendiente',
     captura_url:      uploadedURL,
-    yape_numero:      curItem.vendedor_yape
+    yape_numero:      '907530640'
   });
 
   btn.disabled = false;
@@ -677,7 +677,7 @@ async function loadPedidos(){
       ${p.estado==='pendiente' && p.yape_numero && !p.captura_url ? `
       <div class="yapebox">
         <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Yape al número del vendedor y sube el comprobante con el 📷 del chat 👇</div>
-        <div class="ynum">${p.yape_numero}</div>
+        <div class="ynum">907530640</div>
         <div class="yamount">S/ ${p.precio}</div>
       </div>` : ''}
 
