@@ -1073,6 +1073,13 @@ db.channel('dash-realtime')
       loadOfertas(); loadDashStats();
     }
   })
+  .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'items' }, i => {
+    if (i.new.vendedor_id === vSession?.id && i.new.activo === true && i.old?.activo === false && i.new.aprobado === true) {
+      showToast('🎉 ¡Tu ítem "' + i.new.nombre + '" fue aprobado y está publicado!', 'ok');
+      loadItems();
+      loadDashStats();
+    }
+  })
   .subscribe();
 </script>
 </body>
