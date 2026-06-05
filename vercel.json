@@ -1,7 +1,15 @@
 {
   "rewrites": [
     { "source": "/comprar", "destination": "/comprador.html" },
-    { "source": "/vender",  "destination": "/vendedor.html"  },
-    { "source": "/admin",   "destination": "/admin.html"     }
+    { "source": "/vender", "destination": "/vendedor.html" },
+    { "source": "/admin", "destination": "/admin.html" }
+  ],
+  "headers": [
+    {
+      "source": "/admin",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    }
   ]
 }
