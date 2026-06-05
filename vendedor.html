@@ -393,7 +393,7 @@ async function doLogin() {
 
 function loginSession(vend) {
   vSession = vend;
-  localStorage.setItem('brainrot_session', JSON.stringify(vend));
+  localStorage.setItem('brainrot_session', JSON.stringify({ ...vend, _exp: Date.now() + 48 * 60 * 60 * 1000 }));
   updateUI();
   goTo('s-dash');
   loadDashStats();
@@ -970,12 +970,17 @@ window.addEventListener('load', () => {
   const saved = localStorage.getItem('brainrot_session');
   if (saved) {
     try {
-      vSession = JSON.parse(saved);
-      updateUI();
-      goTo('s-dash');
-      loadDashStats();
-      loadPedidos();
-      loadOfertas();
+      const parsed = JSON.parse(saved);
+      if (parsed._exp && Date.now() > parsed._exp) {
+        localStorage.removeItem('brainrot_session');
+      } else {
+        vSession = parsed;
+        updateUI();
+        goTo('s-dash');
+        loadDashStats();
+        loadPedidos();
+        loadOfertas();
+      }
     } catch (e) { localStorage.removeItem('brainrot_session'); }
   }
 });
