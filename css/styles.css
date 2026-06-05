@@ -935,6 +935,12 @@ body {
   color: #7a7a9a;
   border-color: rgba(122, 122, 154, 0.4);
 }
+.ropt.sel-OG {
+  background: rgba(255, 209, 102, 0.18);
+  color: #ffd166;
+  border-color: rgba(255, 209, 102, 0.7);
+  box-shadow: 0 0 10px rgba(255, 209, 102, 0.2);
+}
 
 /* Search bar */
 .cat-head {
