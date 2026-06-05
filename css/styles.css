@@ -771,7 +771,7 @@ body {
 /* Grids */
 .igrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 14px;
 }
 
@@ -780,6 +780,13 @@ body {
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
   margin-bottom: 28px;
+}
+@media (max-width: 600px) {
+  .sgrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 20px;
+  }
 }
 
 .sbox {
@@ -1039,10 +1046,13 @@ body {
   font-size: 13px;
   display: none;
   z-index: 999;
-  white-space: nowrap;
-  max-width: 90vw;
+  white-space: normal;
+  word-break: break-word;
+  width: max-content;
+  max-width: min(90vw, 380px);
   text-align: center;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  line-height: 1.4;
 }
 .toast.ok {
   background: #4ade80;
@@ -1204,6 +1214,14 @@ body {
   filter: blur(80px);
   opacity: 0.18;
   animation: drift 12s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@media (max-width: 900px) {
+  .bg-blob {
+    filter: blur(50px);
+    opacity: 0.12;
+    animation: none;
+  }
 }
 .b1 {
   width: 600px;
@@ -1244,7 +1262,13 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 40px 20px;
+  padding: 40px 16px;
+}
+@media (max-width: 600px) {
+  .hero {
+    padding: 28px 16px;
+    min-height: auto;
+  }
 }
 
 .hero-tag {
@@ -2136,17 +2160,26 @@ footer strong {
     display: flex;
   }
   .topbar {
-    padding: 0 16px;
-    height: 54px;
+    padding: 0 12px;
+    height: 52px;
   }
   .content {
-    padding: 14px 14px 24px;
+    padding: 12px 12px 80px;
   }
   .sgrid {
     grid-template-columns: 1fr 1fr;
   }
   .oacts {
     grid-template-columns: 1fr;
+  }
+  .srch {
+    max-width: 100%;
+  }
+  .tabbar {
+    margin-bottom: 14px;
+  }
+  .fcard {
+    padding: 18px;
   }
 }
 
@@ -2169,6 +2202,23 @@ footer strong {
   }
 }
 
+.stats {
+  gap: 10px;
+}
+@media (max-width: 600px) {
+  .stats {
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .stat {
+    min-width: 70px;
+  }
+  .stat-n {
+    font-size: 22px;
+  }
+}
+
 @media (max-width: 600px) {
   nav {
     padding: 14px 16px;
@@ -2180,9 +2230,8 @@ footer strong {
   .cta-p, .cta-s {
     width: 100%;
     justify-content: center;
-  }
-  .stats {
-    gap: 10px;
+    font-size: 17px;
+    padding: 14px 24px;
   }
 }
 
@@ -2198,16 +2247,167 @@ footer strong {
     right: 0;
     max-width: 100%;
     margin: 0;
-    max-height: 88vh;
+    max-height: 92vh;
+    padding: 20px 16px 28px;
   }
   .moverlay {
     align-items: flex-end;
     padding: 0;
   }
+  .btn-p, .btn-s {
+    font-size: 15px;
+    padding: 12px 20px;
+  }
+  .btn-full {
+    font-size: 17px;
+    padding: 14px;
+  }
+  .topbar .uchip {
+    font-size: 11px;
+    padding: 4px 10px;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 @media (max-width: 480px) {
   .igrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .iimg {
+    height: 80px;
+  }
+  .ibody {
+    padding: 9px;
+  }
+  .price {
+    font-size: 16px;
+  }
+  .buymini {
+    padding: 5px 9px;
+    font-size: 10px;
+  }
+  .snum {
+    font-size: 22px;
+  }
+  .sbox {
+    padding: 12px 8px;
+  }
+}
+/* ── OPTIMIZACIONES DE RENDIMIENTO MÓVIL ── */
+
+/* Reducir animaciones en dispositivos que lo prefieren o en móvil */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* GPU layers para elementos animados */
+.fe, .bg-blob {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Desactivar hover effects en táctil para evitar flash */
+@media (hover: none) {
+  .icard:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: var(--border);
+  }
+  .feat:hover {
+    transform: none;
+    border-color: var(--border);
+  }
+  .cta-p:hover, .cta-s:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* Fix: topbar items no se cortan en móvil */
+.topbar {
+  overflow: hidden;
+}
+.topbar .ttitle {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Fix: chips de filtro siempre scrollables */
+.chips {
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 6px;
+}
+
+/* Fix: tabbar en vendedor scrollable */
+.tabbar {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fix: hero-split en comprador colapsa bien en móvil */
+@media (max-width: 700px) {
+  .hero-split {
     grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 20px 0;
+    text-align: center;
+  }
+  .hero-split p {
+    max-width: 100%;
+  }
+  .hbtns {
+    justify-content: center;
+  }
+  .visual { display: none; }
+}
+
+/* Fix: sgrid stat boxes más compactos en móvil muy pequeño */
+@media (max-width: 380px) {
+  .sgrid {
+    gap: 6px;
+  }
+  .sbox {
+    padding: 10px 6px;
+  }
+  .snum {
+    font-size: 20px;
+  }
+  .slbl {
+    font-size: 9px;
+  }
+  .content {
+    padding: 10px 10px 60px;
+  }
+  .igrid {
+    gap: 8px;
+  }
+}
+
+/* Fix: floats desactivados en móvil para ahorrar CPU */
+@media (max-width: 900px) {
+  .fe {
+    display: none;
+  }
+}
+
+/* Fix: icard imagen no deformada */
+.iimg img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Fix: texto en topbar panel vendedor */
+@media (max-width: 900px) {
+  .ttitle {
+    font-size: 17px;
   }
 }
