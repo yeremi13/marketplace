@@ -614,12 +614,23 @@ async function loadPedidos(){
     .eq('comprador_roblox', gUser)
     .order('created_at', {ascending:false});
 
-  if(error || !data || !data.length){
+  // Mantener solo los últimos 3 pedidos; eliminar el resto
+  if(data && data.length > 3){
+    const aEliminar = data.slice(3); // todos después del índice 2
+    const idsEliminar = aEliminar.map(p => p.id);
+    await db.from('pedidos').delete().in('id', idsEliminar);
+    // También borrar sus mensajes
+    await db.from('mensajes').delete().in('pedido_id', idsEliminar);
+  }
+
+  const pedidos = (data || []).slice(0, 3);
+
+  if(error || !pedidos.length){
     list.innerHTML = '<div style="text-align:center;padding:48px;color:var(--muted);font-size:14px">No tienes pedidos aún</div>';
     return;
   }
 
-  list.innerHTML = data.map(p=>{
+  list.innerHTML = pedidos.map(p=>{
     const stMap = {pendiente:'st-pend',verificado:'st-verif',entregado_vendedor:'st-verif',entregado:'st-done'};
     const stLbl = {pendiente:'Pago pendiente',verificado:'Pago verificado',entregado_vendedor:'Entregado por vendedor ✓',entregado:'Completado ✓'};
     return `<div class="pcard" id="pcard-${p.id}">
@@ -675,7 +686,7 @@ async function loadPedidos(){
   }).join('');
 
   // Cargar mensajes y suscribir realtime para cada pedido
-  data.forEach(p => {
+  pedidos.forEach(p => {
     loadMsgs(p.id);
     subscribeToMsgs(p.id);
     subscribeToPedido(p.id);
