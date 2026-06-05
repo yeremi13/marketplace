@@ -346,28 +346,38 @@ async function desactivarItem(id, btn) {
 async function loadPedidos() {
   const list = document.getElementById('pedidos-list');
   list.innerHTML = '<div class="loader"><i class="ti ti-loader-2"></i>Cargando...</div>';
-  const { data } = await db.from('pedidos').select('*').order('created_at', { ascending: false }).limit(50);
+  const { data } = await db.from('pedidos').select('*, items(foto_url)').order('created_at', { ascending: false }).limit(50);
   if (!data || !data.length) { list.innerHTML = '<div class="empty">No hay pedidos aún</div>'; return; }
   window._caps = {};
   data.forEach(p => { if (p.captura_url) window._caps[p.id] = p.captura_url; });
   const stMap = { pendiente: 'st-pend', verificado: 'st-ver', entregado_vendedor: 'st-ver', entregado: 'st-don' };
   const stLbl = { pendiente: 'Pago pendiente', verificado: 'Pago verificado', entregado_vendedor: 'Entregado por vendedor', entregado: 'Completado ✓' };
-  list.innerHTML = data.map(p => `
+  list.innerHTML = data.map(p => {
+    const itemFoto = p.items?.foto_url;
+    const fotoProducto = itemFoto
+      ? `<img src="${itemFoto}" alt="foto del ítem" style="width:56px;height:56px;object-fit:contain;border-radius:10px;background:#0a0a18;border:1px solid var(--border);flex-shrink:0;">`
+      : `<div style="width:56px;height:56px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--card2);border-radius:10px;flex-shrink:0;">${p.item_emoji}</div>`;
+    return `
     <div class="pcard-admin">
       <div class="phead">
-        <div class="pname">${p.item_emoji} ${escHtml(p.item_nombre)}</div>
-        <span class="badge ${stMap[p.estado] || 'st-pend'}">${stLbl[p.estado] || p.estado}</span>
-      </div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">
-        S/${p.precio} · Comprador: @${p.comprador_roblox} · Vendedor: @${p.vendedor_roblox}<br>
-        ${timeAgo(p.created_at)}
+        <div style="display:flex;align-items:center;gap:12px;min-width:0">
+          ${fotoProducto}
+          <div style="min-width:0">
+            <div class="pname">${escHtml(p.item_nombre)}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">
+              S/${p.precio} · Comprador: @${p.comprador_roblox} · Vendedor: @${p.vendedor_roblox}<br>${timeAgo(p.created_at)}
+            </div>
+          </div>
+        </div>
+        <span class="badge ${stMap[p.estado] || 'st-pend'}" style="flex-shrink:0">${stLbl[p.estado] || p.estado}</span>
       </div>
       ${p.captura_url ? `<img class="cap-img" src="${p.captura_url}" alt="comprobante" onclick="verImg('${p.id}')"><div style="font-size:11px;color:var(--muted);margin-bottom:8px;text-align:center">Comprobante Yape — clic para ampliar</div>` : '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Sin comprobante</div>'}
       ${p.estado === 'pendiente' ? `<div class="pacts">
         <button class="btn-app" onclick="cambiarEstado('${p.id}','verificado',this)"><i class="ti ti-check"></i>Marcar pago verificado</button>
         <button class="btn-del" onclick="cambiarEstado('${p.id}','rechazado',this)"><i class="ti ti-x"></i>Rechazar</button>
       </div>` : ''}
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 async function cambiarEstado(id, estado, btn) {
