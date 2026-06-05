@@ -114,7 +114,7 @@
     <nav class="sb-nav">
       <button class="sni" onclick="goTo('s-home');cs()"><i class="ti ti-home"></i>Inicio</button>
       <button class="sni on"><i class="ti ti-shopping-cart"></i>Catálogo</button>
-      <button class="sni" onclick="goTo('s-pedidos');cs()"><i class="ti ti-package"></i>Mis pedidos<span class="snbadge" id="badge-ped-sb" style="display:none">0</span></button>
+      <button class="sni" onclick="goTo('s-pedidos');cs()"><i class="ti ti-package"></i>Mis pedidos</button>
       <button class="sni" onclick="window.location.href='vendedor.html'"><i class="ti ti-store"></i>Panel vendedor</button>
     </nav>
     <div class="sb-foot">
@@ -129,10 +129,7 @@
       <span class="ttitle">Catálogo</span>
       <div class="spacer"></div>
       <div class="uchip" id="uchip-top">@usuario</div>
-      <div style="position:relative;display:flex">
-        <button style="background:none;border:none;cursor:pointer;padding:4px;color:var(--muted);font-size:22px;display:flex;align-items:center" onclick="goTo('s-pedidos')" title="Mis pedidos"><i class="ti ti-package"></i></button>
-        <span id="badge-ped-top" style="display:none;position:absolute;top:2px;right:2px;width:16px;height:16px;background:var(--brand);color:#fff;border-radius:50%;font-size:9px;font-weight:800;align-items:center;justify-content:center"></span>
-      </div>
+      <button style="background:none;border:none;cursor:pointer;padding:4px;color:var(--muted);font-size:22px;display:flex;align-items:center" onclick="goTo('s-pedidos')" title="Mis pedidos"><i class="ti ti-package"></i></button>
     </div>
     <div class="content">
       <div class="cat-head">
@@ -320,8 +317,6 @@ window.addEventListener('DOMContentLoaded', () => {
     const target = (savedScreen === 's-pedidos') ? 's-pedidos' : 's-catalog';
     goTo(target);
     loadItems();
-    updatePedidosBadge();
-    subscribeToNuevosPedidos();
   }
   // Si no hay sesión, queda en s-home (default)
 });
@@ -331,7 +326,7 @@ function goTo(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
-  if(id === 's-pedidos'){ loadPedidos(); updatePedidosBadge(); }
+  if(id === 's-pedidos') loadPedidos();
   // Guardar pantalla actual si el usuario está logueado
   if(gUser && (id === 's-catalog' || id === 's-pedidos')){
     saveSession(id);
@@ -357,8 +352,6 @@ function enterGuest(){
   document.querySelectorAll('#uchip-top,#uchip-sb').forEach(el=>el.textContent='@'+v);
   saveSession('s-catalog');
   loadItems();
-  updatePedidosBadge();
-  subscribeToNuevosPedidos();
   goTo('s-catalog');
 }
 
@@ -617,7 +610,7 @@ async function loadPedidos(){
   const list = document.getElementById('pedidos-list');
   list.innerHTML = '<div class="loader"><i class="ti ti-loader-2"></i>Cargando...</div>';
 
-  const { data, error } = await db.from('pedidos').select('*')
+  const { data, error } = await db.from('pedidos').select('*, items(foto_url)')
     .eq('comprador_roblox', gUser)
     .order('created_at', {ascending:false});
 
@@ -637,13 +630,20 @@ async function loadPedidos(){
   }
 
   list.innerHTML = pedidos.map(p=>{
+    const foto = p.items?.foto_url;
     const stMap = {pendiente:'st-pend',verificado:'st-verif',entregado_vendedor:'st-verif',entregado:'st-done'};
     const stLbl = {pendiente:'Pago pendiente',verificado:'Pago verificado',entregado_vendedor:'Entregado por vendedor ✓',entregado:'Completado ✓'};
     return `<div class="pcard" id="pcard-${p.id}">
 
-      <!-- Encabezado: nombre + badge estado -->
+      <!-- Encabezado: foto + nombre + badge estado -->
       <div class="phead">
-        <div class="pname">${p.item_emoji} ${p.item_nombre}</div>
+        <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1">
+          ${foto
+            ? `<img src="${foto}" alt="ítem" style="width:44px;height:44px;object-fit:contain;border-radius:9px;background:#0a0a18;border:1px solid var(--border);flex-shrink:0;">`
+            : `<div style="font-size:22px;flex-shrink:0">${p.item_emoji}</div>`
+          }
+          <div class="pname" style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.item_nombre}</div>
+        </div>
         <span class="badge ${stMap[p.estado]||'st-pend'}" id="badge-${p.id}">${stLbl[p.estado]||p.estado}</span>
       </div>
 
@@ -828,7 +828,6 @@ function subscribeToPedido(pedidoId){
       // Recargar la card para mostrar/ocultar botones según estado
       if(p.estado === 'verificado' || p.estado === 'entregado' || p.estado === 'entregado_vendedor'){
         loadPedidos();
-        updatePedidosBadge();
       }
       if(p.estado === 'verificado'){
         showToast('🎉 ¡Tu pago fue verificado! El vendedor entregará pronto.','ok');
@@ -841,46 +840,7 @@ function subscribeToPedido(pedidoId){
   realtimeSubs['ped_'+pedidoId] = sub;
 }
 
-// ── BADGE CONTADOR MIS PEDIDOS ──
-async function updatePedidosBadge(){
-  if(!gUser) return;
-  const { data } = await db.from('pedidos').select('estado')
-    .eq('comprador_roblox', gUser)
-    .in('estado', ['pendiente','verificado','entregado_vendedor']);
-  const count = (data || []).length;
-  const sb  = document.getElementById('badge-ped-sb');
-  const top = document.getElementById('badge-ped-top');
-  if(count > 0){
-    if(sb){ sb.textContent = count; sb.style.display = 'inline'; }
-    if(top){ top.textContent = count; top.style.display = 'flex'; }
-  } else {
-    if(sb){ sb.style.display = 'none'; }
-    if(top){ top.style.display = 'none'; }
-  }
-}
-
-// ── SUSCRIPCIÓN GLOBAL: nuevo pedido creado (oferta aceptada) ──
-function subscribeToNuevosPedidos(){
-  if(realtimeSubs['nuevos_pedidos']) return;
-  const sub = db.channel('nuevos-pedidos-'+gUser)
-    .on('postgres_changes',{
-      event: 'INSERT',
-      schema: 'public',
-      table: 'pedidos',
-      filter: `comprador_roblox=eq.${gUser}`
-    }, payload => {
-      showToast('🎉 ¡Tu oferta fue aceptada! Ya puedes yapear.','ok');
-      updatePedidosBadge();
-      // Si el usuario está en la pantalla de pedidos, recargar
-      if(document.getElementById('s-pedidos').classList.contains('active')){
-        loadPedidos();
-      }
-    })
-    .subscribe();
-  realtimeSubs['nuevos_pedidos'] = sub;
-}
-
-
+async function sendMsg(pedidoId, autor){
   const inp = document.getElementById('ci-'+pedidoId);
   if(!inp || !inp.value.trim()) return;
   const txt = inp.value.trim();
