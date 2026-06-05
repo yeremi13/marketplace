@@ -648,6 +648,7 @@ async function subirItem() {
 // ===== PEDIDOS =====
 function renderPedidoCard(p, completado = false) {
   if (completado) {
+    const foto = p.items?.foto_url;
     return `
     <div id="pc-${p.id}" style="
       background:var(--card);
@@ -661,7 +662,10 @@ function renderPedidoCard(p, completado = false) {
       gap:14px;
       flex-wrap:wrap;
     ">
-      <div style="font-size:28px;flex-shrink:0">${p.item_emoji}</div>
+      ${foto
+        ? `<img src="${foto}" alt="ítem" style="width:52px;height:52px;object-fit:contain;border-radius:10px;background:#0a0a18;border:1px solid var(--border);flex-shrink:0;">`
+        : `<div style="font-size:28px;flex-shrink:0">${p.item_emoji}</div>`
+      }
       <div style="flex:1;min-width:0">
         <div style="font-weight:800;font-size:14px;margin-bottom:2px">${escHtml(p.item_nombre)}</div>
         <div style="font-size:11px;color:var(--muted)">@${p.comprador_roblox} · ${timeAgo(p.created_at)}</div>
@@ -682,13 +686,22 @@ function renderPedidoCard(p, completado = false) {
       </div>
     </div>`;
   }
+  const fotoActivo = p.items?.foto_url;
   return `
     <div class="pcard" id="pc-${p.id}">
       <div class="phead">
-        <div class="pname">${p.item_emoji} ${escHtml(p.item_nombre)}</div>
-        <span class="badge ${p.estado === 'pendiente' ? 'st-new' : p.estado === 'verificado' ? 'st-ver' : 'st-don'}">${p.estado === 'pendiente' ? 'Pago pendiente' : p.estado === 'verificado' ? 'Pago verificado' : 'Esperando confirmación'}</span>
+        <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1">
+          ${fotoActivo
+            ? `<img src="${fotoActivo}" alt="ítem" style="width:44px;height:44px;object-fit:contain;border-radius:9px;background:#0a0a18;border:1px solid var(--border);flex-shrink:0;">`
+            : `<div style="font-size:22px;flex-shrink:0">${p.item_emoji}</div>`
+          }
+          <div style="min-width:0">
+            <div class="pname">${escHtml(p.item_nombre)}</div>
+            <div style="font-size:12px;color:var(--muted)">S/${p.precio} · @${p.comprador_roblox} · ${timeAgo(p.created_at)}</div>
+          </div>
+        </div>
+        <span class="badge ${p.estado === 'pendiente' ? 'st-new' : p.estado === 'verificado' ? 'st-ver' : 'st-don'}" style="flex-shrink:0">${p.estado === 'pendiente' ? 'Pago pendiente' : p.estado === 'verificado' ? 'Pago verificado' : 'Esperando confirmación'}</span>
       </div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">S/${p.precio} · Comprador: @${p.comprador_roblox} · ${timeAgo(p.created_at)}</div>
       ${p.estado === 'verificado' ? '<div class="tbox"><i class="ti ti-clock"></i>Tienes 2 horas para entregar este ítem en Roblox</div>' : ''}
       ${p.estado === 'entregado_vendedor' ? '<div class="tbox" style="background:rgba(74,222,128,.08);border-color:rgba(74,222,128,.25)"><i class="ti ti-clock" style="color:#4ade80"></i><span style="color:#4ade80">Entrega marcada. Esperando que el comprador confirme la recepción.</span></div>' : ''}
       ${p.captura_url ? `<img class="cap-img" src="${p.captura_url}" alt="comprobante Yape" onclick="verImagen('${p.id}')">
@@ -736,8 +749,8 @@ async function loadPedidos() {
   list.innerHTML = '<div class="loader"><i class="ti ti-loader-2"></i>Cargando...</div>';
 
   const [{ data: activos }, { data: completados }] = await Promise.all([
-    db.from('pedidos').select('*').eq('vendedor_id', vSession.id).in('estado', ['pendiente', 'verificado', 'entregado_vendedor']).order('created_at', { ascending: false }),
-    db.from('pedidos').select('*').eq('vendedor_id', vSession.id).eq('estado', 'entregado').order('created_at', { ascending: false }).limit(3)
+    db.from('pedidos').select('*, items(foto_url)').eq('vendedor_id', vSession.id).in('estado', ['pendiente', 'verificado', 'entregado_vendedor']).order('created_at', { ascending: false }),
+    db.from('pedidos').select('*, items(foto_url)').eq('vendedor_id', vSession.id).eq('estado', 'entregado').order('created_at', { ascending: false }).limit(3)
   ]);
 
   let html = '';
